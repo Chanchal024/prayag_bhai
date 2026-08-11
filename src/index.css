@@ -1,0 +1,129 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+@theme {
+  --color-bg: #060606;
+  --color-primary: #F5F4F0;
+  --color-secondary: #A1A1AA;
+  --color-dark-bg: #060606;
+  --color-light-text: #F5F4F0;
+  --color-border: rgba(245, 244, 240, 0.15);
+  --color-dark-border: rgba(245, 244, 240, 0.15);
+  --color-accent-orange: #ea580c;
+
+  --font-serif: 'Playfair Display', 'DM Serif Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    background-color: #060606;
+    color: #F5F4F0;
+    font-family: 'Inter', sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #060606;
+    color: #F5F4F0;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-serif-display {
+    font-family: 'Playfair Display', 'DM Serif Display', Georgia, serif;
+    letter-spacing: -0.02em;
+    color: #F5F4F0;
+  }
+
+  /* Custom cursor hiding default on desktop when custom cursor active */
+  @media (min-width: 768px) {
+    .custom-cursor-active, .custom-cursor-active * {
+      cursor: none !important;
+    }
+  }
+}
+
+/* Comprehensive Text & Border Visibility Overrides for Dark Black + Orange Theme */
+.text-\[\#111111\]:not(button):not(a.bg-\[\#F5F4F0\]):not(a.bg-white):not(button *):not(a.bg-\[\#F5F4F0\] *):not(a.bg-white *):not(.bg-\[\#F5F4F0\] *):not(.bg-white *),
+.text-\[\#0E0E0E\]:not(button):not(a.bg-\[\#F5F4F0\]):not(a.bg-white):not(button *):not(a.bg-\[\#F5F4F0\] *):not(a.bg-white *):not(.bg-\[\#F5F4F0\] *):not(.bg-white *),
+.text-\[\#141414\]:not(button):not(a.bg-\[\#F5F4F0\]):not(a.bg-white):not(button *):not(a.bg-\[\#F5F4F0\] *):not(a.bg-white *):not(.bg-\[\#F5F4F0\] *):not(.bg-white *) {
+  color: #F5F4F0 !important;
+}
+
+.text-\[\#6F6F6A\] {
+  color: #A1A1AA !important;
+}
+
+.border-\[\#D8D7D2\] {
+  border-color: rgba(245, 244, 240, 0.15) !important;
+}
+
+.divide-\[\#D8D7D2\] > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(245, 244, 240, 0.15) !important;
+}
+
+.bg-\[\#F5F4F0\]:not(button):not(a):not(span) {
+  background-color: rgba(20, 20, 20, 0.8) !important;
+  color: #F5F4F0 !important;
+  border-color: rgba(245, 244, 240, 0.15) !important;
+}
+
+/* Orange selection highlight */
+::selection {
+  background-color: #ea580c;
+  color: #ffffff;
+}
+
+/* Custom Editorial Keyframe Animations */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Line reveal utility */
+.overflow-hidden-line {
+  overflow: hidden;
+  display: block;
+}
+
+/* Custom Scrollbar for subtle editorial feel */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #060606;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ea580c;
+}
+
+/* Hide scrollbar for clean horizontal swipe containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
