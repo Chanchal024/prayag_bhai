@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
 const CursorContext = createContext({
   cursorType: 'default',
@@ -11,18 +11,23 @@ export const CursorProvider = ({ children }) => {
   const [cursorType, setCursorType] = useState('default');
   const [cursorText, setCursorText] = useState('');
 
-  const setCursor = (type = 'default', text = '') => {
+  const setCursor = useCallback((type = 'default', text = '') => {
     setCursorType(type);
     setCursorText(text);
-  };
+  }, []);
 
-  const resetCursor = () => {
+  const resetCursor = useCallback(() => {
     setCursorType('default');
     setCursorText('');
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ cursorType, cursorText, setCursor, resetCursor }),
+    [cursorType, cursorText, setCursor, resetCursor]
+  );
 
   return (
-    <CursorContext.Provider value={{ cursorType, cursorText, setCursor, resetCursor }}>
+    <CursorContext.Provider value={value}>
       {children}
     </CursorContext.Provider>
   );

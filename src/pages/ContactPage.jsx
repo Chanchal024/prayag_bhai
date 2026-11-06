@@ -7,35 +7,102 @@ export const ContactPage = () => {
     name: '',
     email: '',
     phone: '',
-    service: 'Editorial & Fashion',
-    budget: '$5,000 – $10,000',
+    service: 'Video Editing',
     date: '',
     message: '',
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSucceeded, setIsSucceeded] = useState(false);
+  const [activationNotice, setActivationNotice] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
   const { setCursor, resetCursor } = useCursor();
 
   const servicesList = [
-    'Editorial & Fashion',
-    'Real Estate & Architecture',
-    'Commercial & Product',
-    'Aerial & Aviation',
-    'Travel & Documentary',
-    'Fine Art Portrait',
-    'Private Event & Gala'
+    'Video Editing',
+    'Videography',
+    'Motion Graphics'
   ];
 
-  const budgetList = [
-    '$3,500 – $5,000',
-    '$5,000 – $10,000',
-    '$10,000 – $25,000',
-    '$25,000+'
-  ];
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setErrorMessage('');
+
+    // Client-side validation
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setErrorMessage('Please fill in all required fields.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrorMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        _subject: `New Inquiry from ${formData.name} – Prayag Das Studio`,
+        _template: 'table',
+        _captcha: 'false',
+        'Full Name': formData.name,
+        'Email Address': formData.email,
+        'Phone Number': formData.phone || 'Not provided',
+        'Service Required': formData.service,
+        'Target Timeline': formData.date || 'Not provided',
+        'Project Details': formData.message,
+      };
+
+      // Send directly to prayagdas2003@gmail.com
+      const response = await fetch('https://formsubmit.co/ajax/prayagdas2003@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      setSubmittedData({ ...formData });
+
+      if (result.success === 'true' || result.success === true) {
+        setIsSucceeded(true);
+        setActivationNotice(false);
+      } else if (result.message && result.message.includes('Activation')) {
+        setIsSucceeded(true);
+        setActivationNotice(true);
+      } else {
+        throw new Error(result.message || 'Failed to send message.');
+      }
+    } catch (err) {
+      console.error('Submission error:', err);
+      // Even if network has an issue, preserve submittedData for the user
+      setSubmittedData({ ...formData });
+      setErrorMessage(err.message || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Reset form after successful submission
+  const handleSendAnother = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      service: 'Video Editing',
+      date: '',
+      message: '',
+    });
+    setErrorMessage('');
+    setIsSucceeded(false);
+    setActivationNotice(false);
+    setSubmittedData(null);
   };
 
   return (
@@ -57,17 +124,68 @@ export const ContactPage = () => {
       <section className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-28">
         {/* Left Column: Inquiry Form */}
         <div className="lg:col-span-7 bg-[#111111] text-[#F5F4F0] p-8 sm:p-12 rounded-xs shadow-2xl">
-          {submitted ? (
-            <div className="py-16 text-center space-y-6 animate-fade-in">
+          {isSucceeded ? (
+            <div className="py-10 text-center space-y-6 animate-fade-in">
               <CheckCircle className="w-16 h-16 text-[#F5F4F0] mx-auto" />
               <h2 className="font-serif text-3xl sm:text-4xl text-[#F5F4F0] uppercase font-normal">
-                INQUIRY RECEIVED
+                {activationNotice ? 'ACTIVATION REQUIRED' : 'INQUIRY RECEIVED'}
               </h2>
-              <p className="text-sm text-[#6F6F6A] font-light max-w-md mx-auto leading-relaxed">
-                Thank you for reaching out, {formData.name}. Our studio team has received your message and will get back to you within 24 hours.
+              <p className="text-sm text-[#A1A1AA] font-light max-w-md mx-auto leading-relaxed">
+                {activationNotice ? (
+                  <span>
+                    Form submitted! Since this is the first time, an <strong>Activate Form</strong> link has been sent to <strong>prayagdas2003@gmail.com</strong>. Please check your inbox and click it once to start receiving inquiries.
+                  </span>
+                ) : (
+                  <span>
+                    Thank you for reaching out, {submittedData?.name || formData.name}. Your inquiry has been dispatched and our studio team will respond within 24 hours.
+                  </span>
+                )}
               </p>
+
+              {/* Submitted Inquiry Summary Card */}
+              {submittedData && (
+                <div className="bg-[#181818] border border-white/10 rounded-xl p-6 text-left space-y-4 max-w-lg mx-auto shadow-inner">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#ea580c]">
+                      YOUR SUBMITTED DATA
+                    </span>
+                    <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider">
+                      CONFIRMATION COPY
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider">Name</span>
+                      <span className="text-white font-medium text-sm">{submittedData.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider">Email</span>
+                      <span className="text-white font-medium text-sm">{submittedData.email}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider">Phone</span>
+                      <span className="text-white font-medium text-sm">{submittedData.phone || 'Not provided'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider">Service</span>
+                      <span className="text-[#ea580c] font-medium text-sm">{submittedData.service}</span>
+                    </div>
+                    <div>
+                      <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider">Target Date / Timeline</span>
+                      <span className="text-white font-medium text-sm">{submittedData.date || 'Flexible'}</span>
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-white/10 text-xs">
+                    <span className="text-[#A1A1AA] block text-[10px] uppercase tracking-wider mb-1">Project Details</span>
+                    <p className="text-white/90 leading-relaxed bg-[#111] p-3 rounded-lg border border-white/5 whitespace-pre-wrap">
+                      {submittedData.message}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <button
-                onClick={() => setSubmitted(false)}
+                onClick={handleSendAnother}
                 onMouseEnter={() => setCursor('hover')}
                 onMouseLeave={resetCursor}
                 className="mt-6 inline-flex items-center space-x-2 text-xs uppercase tracking-[0.2em] text-[#F5F4F0] border-b border-[#F5F4F0] pb-1 hover:opacity-75 transition-opacity"
@@ -81,11 +199,12 @@ export const ContactPage = () => {
                 <span className="text-[10px] uppercase tracking-[0.25em] text-[#6F6F6A] font-semibold">
                   01 / YOUR DETAILS
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-[#6F6F6A] mb-2">FULL NAME *</label>
                     <input
                       type="text"
+                      name="name"
                       required
                       placeholder="Jane Doe"
                       value={formData.name}
@@ -97,10 +216,22 @@ export const ContactPage = () => {
                     <label className="block text-xs uppercase tracking-wider text-[#6F6F6A] mb-2">EMAIL ADDRESS *</label>
                     <input
                       type="email"
+                      name="email"
                       required
                       placeholder="jane@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-[#1A1A1A] border border-[#F5F4F0]/20 rounded-xs py-3 px-4 text-sm text-[#F5F4F0] focus:outline-hidden focus:border-[#F5F4F0]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-[#6F6F6A] mb-2">PHONE / WHATSAPP</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      placeholder="+91 98765 43210"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full bg-[#1A1A1A] border border-[#F5F4F0]/20 rounded-xs py-3 px-4 text-sm text-[#F5F4F0] focus:outline-hidden focus:border-[#F5F4F0]"
                     />
                   </div>
@@ -130,14 +261,16 @@ export const ContactPage = () => {
                 </div>
               </div>
 
-
-
               {/* Date & Message */}
               <div className="space-y-6">
                 <div>
+                  <span className="text-[10px] uppercase tracking-[0.25em] text-[#6F6F6A] font-semibold block mb-2">
+                    03 / PROJECT TIMELINE & BRIEF
+                  </span>
                   <label className="block text-xs uppercase tracking-wider text-[#6F6F6A] mb-2">TARGET DATE / TIMELINE</label>
                   <input
                     type="text"
+                    name="timeline"
                     placeholder="e.g. November 2026 or Spring Campaign"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -149,6 +282,7 @@ export const ContactPage = () => {
                   <label className="block text-xs uppercase tracking-wider text-[#6F6F6A] mb-2">PROJECT DESCRIPTION & DETAILS *</label>
                   <textarea
                     rows={4}
+                    name="message"
                     required
                     placeholder="Provide details regarding shoot location, scope, deliverables, and vision..."
                     value={formData.message}
@@ -158,14 +292,19 @@ export const ContactPage = () => {
                 </div>
               </div>
 
+              {errorMessage && (
+                <p className="text-sm text-red-400 text-center">{errorMessage}</p>
+              )}
+
               <button
                 type="submit"
+                disabled={isSubmitting}
                 onMouseEnter={() => setCursor('hover')}
                 onMouseLeave={resetCursor}
-                className="w-full py-4 bg-[#F5F4F0] text-[#111111] font-semibold uppercase tracking-[0.25em] text-xs rounded-full hover:bg-[#D8D7D2] transition-colors flex items-center justify-center space-x-3 group cursor-pointer"
+                className={`w-full py-4 bg-[#F5F4F0] text-[#111111] font-semibold uppercase tracking-[0.25em] text-xs rounded-full hover:bg-[#D8D7D2] transition-colors flex items-center justify-center space-x-3 group cursor-pointer ${isSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
-                <span>SUBMIT INQUIRY</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>{isSubmitting ? 'SENDING...' : 'SUBMIT INQUIRY'}</span>
+                {!isSubmitting && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
               </button>
             </form>
           )}

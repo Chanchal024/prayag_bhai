@@ -1,19 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowUpRight, Camera, Award, Globe, Compass, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { ContactCTA } from '../components/ContactCTA';
 import { useCursor } from '../context/CursorContext';
 import { milestonesData } from '../data/milestones';
 
 export const AboutPage = () => {
   const { setCursor, resetCursor } = useCursor();
-
-  const gear = [
-    { cat: "MEDIUM FORMAT", items: "Hasselblad H6D-100c, Phase One XF IQ4 150MP" },
-    { cat: "DIGITAL 35MM", items: "Leica SL2, Sony A1, Canon EOS R3" },
-    { cat: "PRIME OPTICS", items: "Summicron-M 35mm f/2, Schneider Kreuznach 80mm, RF 600mm f/4" },
-    { cat: "LIGHTING & DRONE", items: "Profoto B10X HDR Monolights, DJI Matrice 300 RTK" }
-  ];
 
   return (
     <main className="pt-32 pb-20 md:pt-40">
@@ -36,7 +28,7 @@ export const AboutPage = () => {
 
           <div className="space-y-6 text-base text-[#A1A1AA] font-light leading-relaxed">
             <p>
-              Based in Cuttack, Odisha, India, Prayag Kumar Das discovered video editing while working on commercial campaigns and cinematic stories. Over the past seven years, his work has evolved into a distinctive blend of visual pacing, color grading, and motion graphics.
+              Based in Cuttack, Odisha, India, Prayag Kumar Das discovered video editing while working on commercial campaigns and cinematic stories. Over the past three years, his work has evolved into a distinctive blend of visual pacing, color grading, and motion graphics.
             </p>
             <p>
               Whether editing high-energy commercial reels or sculpting subtle color tones in post-production, Prayag brings unwavering precision to composition, timing, and visual storytelling.
@@ -60,12 +52,14 @@ export const AboutPage = () => {
           <div
             onMouseEnter={() => setCursor('view')}
             onMouseLeave={resetCursor}
-            className="w-full aspect-[4/5] rounded-xs overflow-hidden bg-[#141414] relative border border-white/10"
+            className="w-full max-w-md lg:ml-auto aspect-[4/5] rounded-xs overflow-hidden bg-[#141414] relative border border-white/10"
           >
             <img
               src="/p3.png"
               alt="Prayag Kumar Das"
               className="w-full h-full object-cover object-center"
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute bottom-6 left-6 bg-[#060606]/85 backdrop-blur-md px-4 py-2 border border-white/20 text-[10px] uppercase tracking-[0.25em] text-[#F5F4F0]">
               PRAYAG KUMAR DAS / IN STUDIO 2026
@@ -108,31 +102,6 @@ export const AboutPage = () => {
         </div>
       </section>
 
-      {/* Equipment & Optics Specs */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 py-16">
-        <div className="mb-12">
-          <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA]">
-            TECHNICAL STANDARDS
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl text-[#F5F4F0] uppercase font-normal mt-2">
-            CAMERA & LIGHTING GEAR
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 border-t border-white/10 pt-8">
-          {gear.map((g, idx) => (
-            <div key={idx} className="space-y-3">
-              <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#ea580c] flex items-center space-x-2">
-                <Camera className="w-4 h-4 text-[#ea580c]" />
-                <span>{g.cat}</span>
-              </span>
-              <p className="text-xs text-[#A1A1AA] leading-relaxed font-mono">
-                {g.items}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <ContactCTA />
     </main>

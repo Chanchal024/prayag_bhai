@@ -6,9 +6,9 @@ gsap.registerPlugin(ScrollTrigger);
 
 const statData = [
   { num: "01", val: 8, suffix: "K+", label: "Hours Behind the Lens" },
-  { num: "02", val: 7, suffix: "+", label: "Years of Experience" },
-  { num: "03", val: 24, suffix: "+", label: "Awards & Recognitions" },
-  { num: "04", val: 120, suffix: "+", label: "Happy Clients" },
+  { num: "02", val: 3, suffix: "+", label: "Years of Experience" },
+  { num: "03", val: 5, suffix: "+", label: "Awards & Recognitions" },
+  { num: "04", val: 30, suffix: "+", label: "Happy Clients" },
 ];
 
 export const Stats = () => {
@@ -17,24 +17,31 @@ export const Stats = () => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          toggleActions: 'play none none none',
+        },
+      });
+
       statData.forEach((stat, idx) => {
         const el = countersRef.current[idx];
         if (!el) return;
 
         const obj = { value: 0 };
-        gsap.to(obj, {
-          value: stat.val,
-          duration: 2.2,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 80%',
-            toggleActions: 'play none none none',
+        tl.to(
+          obj,
+          {
+            value: stat.val,
+            duration: 2.2,
+            ease: 'power2.out',
+            onUpdate: () => {
+              el.textContent = `${Math.floor(obj.value)}${stat.suffix}`;
+            },
           },
-          onUpdate: () => {
-            el.innerText = `${Math.floor(obj.value)}${stat.suffix}`;
-          },
-        });
+          0
+        );
       });
     }, sectionRef);
 

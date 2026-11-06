@@ -89,6 +89,8 @@ export const Testimonials = () => {
               src={current.image}
               alt={current.author}
               className="w-14 h-14 rounded-full object-cover border border-[#ea580c]/40"
+              loading="lazy"
+              decoding="async"
             />
             <div className="flex flex-col">
               <span className="font-serif text-lg font-normal text-[#F5F4F0]">

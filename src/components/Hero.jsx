@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowDown, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCursor } from '../context/CursorContext';
@@ -94,13 +94,35 @@ export const Hero = () => {
         });
       }
 
-      // Ensure video plays smoothly on mount
+      // Ensure video plays smoothly on mount and pauses when scrolled out of view
       if (videoRef.current) {
         videoRef.current.play().catch(() => {});
       }
     }, heroRef);
 
-    return () => ctx.revert();
+    // Pause hero background video when not in viewport to save CPU/GPU
+    let observer;
+    if (heroRef.current && videoRef.current) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!videoRef.current) return;
+            if (entry.isIntersecting) {
+              videoRef.current.play().catch(() => {});
+            } else {
+              videoRef.current.pause();
+            }
+          });
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(heroRef.current);
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+      ctx.revert();
+    };
   }, []);
 
   const handleScrollClick = (e) => {

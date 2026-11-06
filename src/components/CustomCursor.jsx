@@ -19,19 +19,30 @@ export const CustomCursor = () => {
     let cursorX = mouseX;
     let cursorY = mouseY;
     let animationFrameId;
+    let visibleFlag = false;
 
     const onMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      if (!isVisible) setIsVisible(true);
+      if (!visibleFlag) {
+        visibleFlag = true;
+        setIsVisible(true);
+      }
     };
 
-    const onMouseLeave = () => setIsVisible(false);
-    const onMouseEnter = () => setIsVisible(true);
+    const onMouseLeave = () => {
+      visibleFlag = false;
+      setIsVisible(false);
+    };
 
-    window.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseleave', onMouseLeave);
-    document.addEventListener('mouseenter', onMouseEnter);
+    const onMouseEnter = () => {
+      visibleFlag = true;
+      setIsVisible(true);
+    };
+
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    document.addEventListener('mouseleave', onMouseLeave, { passive: true });
+    document.addEventListener('mouseenter', onMouseEnter, { passive: true });
 
     const render = () => {
       // Smooth lerp (linear interpolation)
@@ -57,9 +68,7 @@ export const CustomCursor = () => {
       document.removeEventListener('mouseenter', onMouseEnter);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isVisible]);
-
-  if (!isVisible) return null;
+  }, []);
 
   const isView = cursorType === 'view';
   const isDrag = cursorType === 'drag';
@@ -75,13 +84,17 @@ export const CustomCursor = () => {
       {/* Small instant dot */}
       <div
         ref={cursorDotRef}
-        className="fixed top-0 left-0 w-2 h-2 bg-[#ea580c] rounded-full pointer-events-none z-[9999] hidden md:block transition-opacity duration-300 shadow-[0_0_10px_#ea580c]"
+        className={`fixed top-0 left-0 w-2 h-2 bg-[#ea580c] rounded-full pointer-events-none z-[9999] hidden md:block transition-opacity duration-300 shadow-[0_0_10px_#ea580c] ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
       />
 
       {/* Trailing larger ring / badge */}
       <div
         ref={cursorRef}
-        className={`fixed top-0 left-0 rounded-full pointer-events-none z-[9998] hidden md:flex items-center justify-center text-[11px] font-medium tracking-widest uppercase transition-all duration-300 ease-out ${sizeClass}`}
+        className={`fixed top-0 left-0 rounded-full pointer-events-none z-[9998] hidden md:flex items-center justify-center text-[11px] font-medium tracking-widest uppercase transition-all duration-300 ease-out ${sizeClass} ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
       >
         {(isView || isDrag || cursorText) && (
           <span className="animate-fade-in font-sans tracking-[0.2em]">

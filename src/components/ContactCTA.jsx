@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Mail } from 'lucide-react';
-import { FaInstagram, FaLinkedin, FaFacebook } from 'react-icons/fa6';
+import { FaInstagram, FaLinkedin } from 'react-icons/fa6';
 import { useCursor } from '../context/CursorContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

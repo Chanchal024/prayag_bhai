@@ -1,12 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { projects } from '../data/projects';
 import { ProjectCard } from './ProjectCard';
 import { useCursor } from '../context/CursorContext';
 
-export const FeaturedWork = ({ limit = 5, showHeader = true }) => {
-  const displayProjects = projects.slice(0, limit);
+export const FeaturedWork = React.memo(({ limit = 5, showHeader = true }) => {
+  const displayProjects = useMemo(() => projects.slice(0, limit), [limit]);
   const { setCursor, resetCursor } = useCursor();
 
   return (
@@ -42,4 +42,4 @@ export const FeaturedWork = ({ limit = 5, showHeader = true }) => {
       </div>
     </section>
   );
-};
+});

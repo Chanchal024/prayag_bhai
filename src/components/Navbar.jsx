@@ -12,17 +12,16 @@ export const Navbar = () => {
   const menuLinksRef = useRef([]);
   const { setCursor, resetCursor } = useCursor();
 
-  const isHomeHero = location.pathname === '/' && !scrolled;
-
   useEffect(() => {
+    let lastScrolled = false;
     const handleScroll = () => {
-      if (window.scrollY > 40) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+      const isScrolled = window.scrollY > 40;
+      if (isScrolled !== lastScrolled) {
+        lastScrolled = isScrolled;
+        setScrolled(isScrolled);
       }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

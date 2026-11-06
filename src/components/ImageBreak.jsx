@@ -57,6 +57,8 @@ export const ImageBreak = () => {
         src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=2400&q=85"
         alt="Cinematic full width landscape photography"
         className="w-full h-full object-cover object-center"
+        loading="lazy"
+        decoding="async"
       />
 
       {/* Dark gradient overlay for text legibility */}

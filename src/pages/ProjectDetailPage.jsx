@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Camera, Calendar, MapPin, User } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Camera, Calendar, MapPin, User } from 'lucide-react';
 import { projects } from '../data/projects';
 import { ImageLightbox } from '../components/ImageLightbox';
 import { ContactCTA } from '../components/ContactCTA';
@@ -8,7 +8,6 @@ import { useCursor } from '../context/CursorContext';
 
 export const ProjectDetailPage = () => {
   const { slug } = useParams();
-  const navigate = useNavigate();
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const { setCursor, resetCursor } = useCursor();
 
@@ -18,6 +17,21 @@ export const ProjectDetailPage = () => {
 
   const currentIndex = projects.findIndex((p) => p.slug === slug);
   const project = projects[currentIndex] || projects[0];
+
+  if (!project) {
+    return (
+      <main className="pt-32 pb-20 md:pt-40 max-w-7xl mx-auto px-6 md:px-12 text-center">
+        <Link
+          to="/work"
+          className="inline-flex items-center space-x-2 text-xs uppercase tracking-[0.2em] font-semibold text-[#A1A1AA] hover:text-[#ea580c] transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 text-[#ea580c]" />
+          <span>BACK TO ALL ALBUMS</span>
+        </Link>
+        <p className="mt-12 text-base text-[#A1A1AA]">No project found.</p>
+      </main>
+    );
+  }
 
   const prevProject = projects[(currentIndex - 1 + projects.length) % projects.length];
   const nextProject = projects[(currentIndex + 1) % projects.length];
@@ -100,6 +114,8 @@ export const ProjectDetailPage = () => {
             src={project.heroImage}
             alt={project.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            loading="lazy"
+            decoding="async"
           />
           <div className="absolute bottom-6 right-6 bg-[#060606]/85 backdrop-blur-md px-4 py-2 border border-white/20 text-[10px] uppercase tracking-[0.2em] text-[#F5F4F0]">
             CLICK TO EXPAND
@@ -121,7 +137,6 @@ export const ProjectDetailPage = () => {
       <section className="max-w-7xl mx-auto px-6 md:px-12 space-y-16 md:space-y-24 mb-32">
         {project.gallery && project.gallery.map((img, idx) => {
           const isFull = img.layout === 'full';
-          const isHalf = img.layout === 'half';
 
           return (
             <div
@@ -138,6 +153,7 @@ export const ProjectDetailPage = () => {
                 alt={img.caption || project.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
 

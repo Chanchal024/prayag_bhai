@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { services } from '../data/services';
 import { useCursor } from '../context/CursorContext';
@@ -15,21 +15,11 @@ export const Expertise = () => {
   const previewImgRef = useRef(null);
   const { setCursor, resetCursor } = useCursor();
 
-  // Mouse position tracking for floating image follow effect
-  const mousePos = useRef({ x: 0, y: 0 });
-
   const handleMouseMove = (e) => {
-    const rect = sectionRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    mousePos.current = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
-
     if (previewImgRef.current && hoveredIdx !== null) {
       gsap.to(previewImgRef.current, {
-        x: mousePos.current.x - 140,
-        y: mousePos.current.y - 100,
+        x: e.clientX - 140,
+        y: e.clientY - 100,
         duration: 0.4,
         ease: 'power2.out',
       });
@@ -69,22 +59,20 @@ export const Expertise = () => {
 
         {/* Right Side Vertical Editorial Services List */}
         <div className="lg:col-span-8 flex flex-col divide-y divide-white/10">
-          {services.map((item, idx) => {
-            const isHovered = hoveredIdx === idx;
-            return (
-              <div
-                key={item.num}
-                onMouseEnter={() => {
-                  setHoveredIdx(idx);
-                  setActiveImage(item.image);
-                  setCursor('hover');
-                }}
-                onMouseLeave={() => {
-                  setHoveredIdx(null);
-                  resetCursor();
-                }}
-                className="group py-8 md:py-10 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-300 cursor-pointer"
-              >
+          {services.map((item, idx) => (
+            <div
+              key={item.num}
+              onMouseEnter={() => {
+                setHoveredIdx(idx);
+                setActiveImage(item.image);
+                setCursor('hover');
+              }}
+              onMouseLeave={() => {
+                setHoveredIdx(null);
+                resetCursor();
+              }}
+              className="group py-8 md:py-10 flex flex-col md:flex-row md:items-center justify-between transition-colors duration-300 cursor-pointer"
+            >
                 <div className="flex items-start space-x-6 md:space-x-8">
                   <span className="text-xs font-mono tracking-widest text-[#ea580c] pt-1 font-semibold">
                     {item.num}
@@ -108,8 +96,7 @@ export const Expertise = () => {
                   </span>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
       </div>
 

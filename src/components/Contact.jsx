@@ -14,24 +14,68 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    projectType: 'Commercial Video',
-    budget: '$5k - $10k',
+    phone: '',
+    projectType: 'Video Editing',
+    budget: '$5,000 – $10,000',
     message: ''
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
-    setFormData({
-      name: '',
-      email: '',
-      projectType: 'Commercial Video',
-      budget: '$5k - $10k',
-      message: ''
-    });
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        _subject: `New Inquiry from ${formData.name} – Prayag Das Studio`,
+        _template: 'table',
+        _captcha: 'false',
+        'Full Name': formData.name,
+        'Email Address': formData.email,
+        'Phone Number': formData.phone || 'Not provided',
+        'Project Type': formData.projectType,
+        'Estimated Budget': formData.budget,
+        'Project Brief': formData.message,
+      };
+
+      const res = await fetch('https://formsubmit.co/ajax/prayagdas2003@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      setSubmittedData({ ...formData });
+
+      if (data.success === 'true' || data.success === true || (data.message && data.message.includes('Activation'))) {
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 10000);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          projectType: 'Video Editing',
+          budget: '$5,000 – $10,000',
+          message: ''
+        });
+      } else {
+        throw new Error(data.message || 'Failed to send message.');
+      }
+    } catch (err) {
+      console.error('Contact error:', err);
+      setSubmittedData({ ...formData });
+      setErrorMessage(err.message || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const socialLinks = [
@@ -145,8 +189,25 @@ export default function Contact() {
             <form onSubmit={handleSubmit} className="p-8 sm:p-10 rounded-[32px] bg-[#141414] border border-white/10 shadow-2xl space-y-6">
               
               {submitted && (
-                <div className="p-4 rounded-xl bg-[#FF6A1A]/20 border border-[#FF6A1A] text-white text-sm font-semibold flex items-center gap-2">
-                  <span>✓ Thank you! Your message has been received. I'll respond within 24 hours.</span>
+                <div className="p-6 rounded-2xl bg-[#1A1A1A] border border-[#FF6A1A]/40 text-white space-y-3 animate-fade-in shadow-xl">
+                  <div className="flex items-center gap-2 text-[#FF6A1A] font-bold text-sm">
+                    <span>✓ INQUIRY DISPATCHED SUCCESSFULLY</span>
+                  </div>
+                  <p className="text-xs text-[#A1A1AA]">
+                    Thank you for reaching out, {submittedData?.name}! Here is a copy of your submitted inquiry:
+                  </p>
+                  {submittedData && (
+                    <div className="bg-[#141414] p-4 rounded-xl border border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div><span className="text-[#A1A1AA]">Name:</span> <span className="text-white font-medium ml-1">{submittedData.name}</span></div>
+                      <div><span className="text-[#A1A1AA]">Email:</span> <span className="text-white font-medium ml-1">{submittedData.email}</span></div>
+                      <div><span className="text-[#A1A1AA]">Phone:</span> <span className="text-white font-medium ml-1">{submittedData.phone || 'Not provided'}</span></div>
+                      <div><span className="text-[#A1A1AA]">Project:</span> <span className="text-[#FF6A1A] font-medium ml-1">{submittedData.projectType}</span></div>
+                      <div><span className="text-[#A1A1AA]">Budget:</span> <span className="text-white font-medium ml-1">{submittedData.budget}</span></div>
+                      <div className="col-span-full pt-1 border-t border-white/5">
+                        <span className="text-[#A1A1AA]">Brief:</span> <span className="text-white/90 italic ml-1">{submittedData.message}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -178,21 +239,42 @@ export default function Contact() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-xs font-mono uppercase text-muted-text mb-2">Project Type</label>
-                  <select 
-                    value={formData.projectType}
-                    onChange={(e) => setFormData({...formData, projectType: e.target.value})}
-                    className="w-full px-5 py-3.5 rounded-xl bg-[#1A1A1A] border border-white/10 text-white focus:outline-none focus:border-[#FF6A1A] transition-colors"
-                  >
-                    <option value="Commercial Video">Commercial Video</option>
-                    <option value="Motion Graphics">3D / 2D Motion Graphics</option>
-                    <option value="Color Grading">DaVinci Color Grading</option>
-                    <option value="Music Video">Music Video</option>
-                    <option value="Full Campaign">Full Campaign Post-Production</option>
-                  </select>
+                  <label className="block text-xs font-mono uppercase text-muted-text mb-2">Phone / WhatsApp</label>
+                  <input 
+                    type="tel" 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    placeholder="+91 82492 22827"
+                    className="w-full px-5 py-3.5 rounded-xl bg-[#1A1A1A] border border-white/10 text-white placeholder-muted-text focus:outline-none focus:border-[#FF6A1A] transition-colors"
+                  />
                 </div>
 
+                <div>
+                  <label className="block text-xs font-mono uppercase text-muted-text mb-2">Estimated Budget</label>
+                  <select 
+                    value={formData.budget}
+                    onChange={(e) => setFormData({...formData, budget: e.target.value})}
+                    className="w-full px-5 py-3.5 rounded-xl bg-[#1A1A1A] border border-white/10 text-white focus:outline-none focus:border-[#FF6A1A] transition-colors"
+                  >
+                    <option value="$3,500 – $5,000">$3,500 – $5,000</option>
+                    <option value="$5,000 – $10,000">$5,000 – $10,000</option>
+                    <option value="$10,000 – $25,000">$10,000 – $25,000</option>
+                    <option value="$25,000+">$25,000+</option>
+                  </select>
+                </div>
+              </div>
 
+              <div>
+                <label className="block text-xs font-mono uppercase text-muted-text mb-2">Project Type</label>
+                <select 
+                  value={formData.projectType}
+                  onChange={(e) => setFormData({...formData, projectType: e.target.value})}
+                  className="w-full px-5 py-3.5 rounded-xl bg-[#1A1A1A] border border-white/10 text-white focus:outline-none focus:border-[#FF6A1A] transition-colors"
+                >
+                  <option value="Video Editing">Video Editing</option>
+                  <option value="Videography">Videography</option>
+                  <option value="Motion Graphics">Motion Graphics</option>
+                </select>
               </div>
 
               <div>
@@ -207,12 +289,19 @@ export default function Contact() {
                 />
               </div>
 
+              {errorMessage && (
+                <div className="p-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-sm font-medium">
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-4 rounded-full bg-gradient-to-r from-[#FF6A1A] via-[#FF7A2A] to-[#B52818] text-white font-bold text-base shadow-[0_0_30px_rgba(255,106,26,0.4)] hover:shadow-[0_0_45px_rgba(255,106,26,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group"
+                disabled={isSubmitting}
+                className={`w-full py-4 rounded-full bg-gradient-to-r from-[#FF6A1A] via-[#FF7A2A] to-[#B52818] text-white font-bold text-base shadow-[0_0_30px_rgba(255,106,26,0.4)] hover:shadow-[0_0_45px_rgba(255,106,26,0.6)] hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group ${isSubmitting ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
-                <span>Send Message</span>
-                <FiSend className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                <span>{isSubmitting ? 'Sending...' : 'Send Message'}</span>
+                {!isSubmitting && <FiSend className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
               </button>
 
             </form>

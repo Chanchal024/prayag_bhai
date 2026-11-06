@@ -88,13 +88,15 @@ export const AboutPreview = () => {
           <div
             onMouseEnter={() => setCursor('view')}
             onMouseLeave={resetCursor}
-            className="relative w-full max-w-xl aspect-[4/5] overflow-hidden rounded-xs bg-[#141414] shadow-sm border border-white/10"
+            className="relative w-full max-w-md aspect-[4/5] overflow-hidden rounded-xs bg-[#141414] shadow-sm border border-white/10"
           >
             <img
               ref={imageRef}
               src="/p3.png"
               alt="Prayag Kumar Das Portrait Study"
               className="w-full h-full object-cover object-center"
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-black/10" />
 

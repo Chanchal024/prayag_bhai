@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import gsap from 'gsap';
@@ -10,21 +10,31 @@ import { Background3D } from './components/Background3D';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 
-import { Home } from './pages/Home';
-import { AboutPage } from './pages/AboutPage';
-import { WorkPage } from './pages/WorkPage';
-import { ProjectDetailPage } from './pages/ProjectDetailPage';
-import { ReviewsPage } from './pages/ReviewsPage';
-import { ContactPage } from './pages/ContactPage';
+// Code-split route components for fast initial load
+const Home = lazy(() => import('./pages/Home').then((m) => ({ default: m.Home })));
+const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const WorkPage = lazy(() => import('./pages/WorkPage').then((m) => ({ default: m.WorkPage })));
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then((m) => ({ default: m.ProjectDetailPage })));
+const ReviewsPage = lazy(() => import('./pages/ReviewsPage').then((m) => ({ default: m.ReviewsPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 
 gsap.registerPlugin(ScrollTrigger);
 
-// ScrollToTop component to reset window scroll position on route change
-function ScrollToTop() {
+// ScrollToTop component to reset window & Lenis scroll position on route change
+function ScrollToTop({ lenisRef }) {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    if (lenisRef?.current) {
+      lenisRef.current.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo(0, 0);
+    }
+    // Refresh ScrollTrigger calculations for the newly mounted route
+    const timer = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [pathname, lenisRef]);
   return null;
 }
 
@@ -62,18 +72,20 @@ export default function App() {
     <CursorProvider>
       <div className="relative min-h-screen bg-[#060606] text-[#F5F4F0] font-sans antialiased selection:bg-[#ea580c] selection:text-white overflow-x-hidden">
         <Background3D />
-        <ScrollToTop />
+        <ScrollToTop lenisRef={lenisRef} />
         <CustomCursor />
         <div className="relative z-10">
           <Navbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/work" element={<WorkPage />} />
-            <Route path="/work/:slug" element={<ProjectDetailPage />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-          </Routes>
+          <Suspense fallback={<div className="min-h-screen bg-[#060606]" />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/work" element={<WorkPage />} />
+              <Route path="/work/:slug" element={<ProjectDetailPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/contact" element={<ContactPage />} />
+            </Routes>
+          </Suspense>
           <Footer />
         </div>
       </div>

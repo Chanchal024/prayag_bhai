@@ -1,10 +1,10 @@
 import React from 'react';
 import { clientLogos } from '../data/clients';
 
-export const ClientLogos = () => {
-  // Duplicate array for seamless infinite marquee
-  const marqueeItems = [...clientLogos, ...clientLogos, ...clientLogos];
+// Pre-computed duplicated array for seamless infinite marquee
+const marqueeItems = [...clientLogos, ...clientLogos, ...clientLogos];
 
+export const ClientLogos = () => {
   return (
     <section className="py-16 border-t border-b border-white/10 bg-[#080808]/70 backdrop-blur-md overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8 text-center md:text-left">

@@ -109,11 +109,25 @@ export const Background3D = () => {
 
     // --- 2. LOAD 3D GLB MODEL (`3d1.glb`) ---
     let glbModel = null;
+    let isMounted = true;
     const loader = new GLTFLoader();
 
     loader.load(
       '/3d1.glb',
       (gltf) => {
+        if (!isMounted) {
+          gltf.scene.traverse((child) => {
+            if (child.isMesh) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
+                else child.material.dispose();
+              }
+            }
+          });
+          return;
+        }
+
         const rawModel = gltf.scene;
 
         // Calculate true geometric bounding box center
@@ -192,20 +206,38 @@ export const Background3D = () => {
     window.addEventListener('touchmove', handleTouchMove, { passive: true });
 
     const handleResize = () => {
+      const mobileNow = window.innerWidth < 768;
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, mobileNow ? 1.5 : 2));
     };
 
     window.addEventListener('resize', handleResize);
 
     // --- ANIMATION LOOP ---
     let animationFrameId;
-    const clock = new THREE.Clock();
+    let isTabVisible = !document.hidden;
+    const timer = new THREE.Timer();
 
-    const animate = () => {
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible && !animationFrameId) {
+        timer.update();
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const animate = (timestamp) => {
+      if (!isTabVisible) {
+        animationFrameId = null;
+        return;
+      }
+
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      timer.update(timestamp);
+      const elapsedTime = timer.getElapsed();
 
       // Smooth slow rotation & mouse tracking on the 3D GLB model
       if (!prefersReducedMotion) {
@@ -242,12 +274,12 @@ export const Background3D = () => {
 
       renderer.render(scene, camera);
 
-      // Smooth lerp for interactive ambient light layer
+      // Smooth lerp for interactive ambient light layer via GPU-accelerated transform
       currentLightX += (pageMouseX - currentLightX) * 0.06;
       currentLightY += (pageMouseY - currentLightY) * 0.06;
 
       if (mouseLight) {
-        mouseLight.style.background = `radial-gradient(650px circle at ${currentLightX}px ${currentLightY}px, rgba(234, 88, 12, 0.15) 0%, rgba(194, 65, 12, 0.05) 45%, rgba(6, 6, 6, 0) 75%)`;
+        mouseLight.style.transform = `translate3d(${currentLightX - 400}px, ${currentLightY - 400}px, 0)`;
       }
     };
 
@@ -255,10 +287,27 @@ export const Background3D = () => {
 
     // --- CLEANUP ---
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      isMounted = false;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+      if (glbModel) {
+        glbModel.traverse((child) => {
+          if (child.isMesh) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (Array.isArray(child.material)) child.material.forEach((m) => m.dispose());
+              else child.material.dispose();
+            }
+          }
+        });
+        scene.remove(glbModel);
+      }
 
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
@@ -286,11 +335,18 @@ export const Background3D = () => {
         }}
       />
 
-      {/* 2. Interactive Lerping Orange Mouse Ambient Light Layer */}
+      {/* 2. Interactive Lerping Orange Mouse Ambient Light Layer (Hardware GPU Transform) */}
       <div
-        ref={mouseLightRef}
-        className="absolute inset-0 z-1 pointer-events-none transition-opacity duration-500"
-      />
+        className="absolute inset-0 z-1 pointer-events-none overflow-hidden"
+      >
+        <div
+          ref={mouseLightRef}
+          className="absolute top-0 left-0 w-[800px] h-[800px] rounded-full pointer-events-none will-change-transform"
+          style={{
+            background: 'radial-gradient(circle, rgba(234, 88, 12, 0.15) 0%, rgba(194, 65, 12, 0.05) 45%, rgba(6, 6, 6, 0) 75%)',
+          }}
+        />
+      </div>
 
       {/* 3. Three.js 3D WebGL Atmosphere Canvas Layer */}
       <div

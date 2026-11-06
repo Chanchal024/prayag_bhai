@@ -2,11 +2,8 @@ import React from 'react';
 import { Star, Quote } from 'lucide-react';
 import { testimonials } from '../data/testimonials';
 import { ContactCTA } from '../components/ContactCTA';
-import { useCursor } from '../context/CursorContext';
 
 export const ReviewsPage = () => {
-  const { setCursor, resetCursor } = useCursor();
-
   return (
     <main className="pt-32 pb-20 md:pt-40">
       {/* Header */}
@@ -65,6 +62,8 @@ export const ReviewsPage = () => {
                   src={item.image}
                   alt={item.author}
                   className="w-12 h-12 rounded-full object-cover border border-[#F5F4F0]/30"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="flex flex-col">
                   <span className="font-serif text-base font-normal text-[#F5F4F0]">

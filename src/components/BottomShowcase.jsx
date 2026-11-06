@@ -30,7 +30,29 @@ export const BottomShowcase = () => {
       );
     }, containerRef);
 
-    return () => ctx.revert();
+    // Only load & play video when in viewport
+    let observer;
+    if (containerRef.current && mediaRef.current) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!mediaRef.current) return;
+            if (entry.isIntersecting) {
+              mediaRef.current.play().catch(() => {});
+            } else {
+              mediaRef.current.pause();
+            }
+          });
+        },
+        { threshold: 0.15, rootMargin: '100px' }
+      );
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -46,11 +68,10 @@ export const BottomShowcase = () => {
       >
         <video
           ref={mediaRef}
-          autoPlay
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out brightness-[0.95]"
         >
           <source src="/assets/v2.mp4" type="video/mp4" />

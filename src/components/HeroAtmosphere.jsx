@@ -79,24 +79,57 @@ export const HeroAtmosphere = () => {
       targetMouseY = (e.clientY / window.innerHeight - 0.5) * 2;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     // Resize handler
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     };
 
     window.addEventListener('resize', handleResize);
 
-    // Animation Loop
-    let animationFrameId;
-    const clock = new THREE.Clock();
+    // Animation Loop with Visibility and Viewport Pause
+    let animationFrameId = null;
+    let isVisible = true;
+    let isTabVisible = !document.hidden;
+    const timer = new THREE.Timer();
 
-    const animate = () => {
+    const handleVisibilityChange = () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible && isVisible && !animationFrameId) {
+        timer.update();
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // IntersectionObserver to pause rendering when hero is out of view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          isVisible = entry.isIntersecting;
+          if (isVisible && isTabVisible && !animationFrameId) {
+            timer.update();
+            animationFrameId = requestAnimationFrame(animate);
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
+
+    const animate = (timestamp) => {
+      if (!isVisible || !isTabVisible) {
+        animationFrameId = null;
+        return;
+      }
+
       animationFrameId = requestAnimationFrame(animate);
-      const elapsedTime = clock.getElapsedTime();
+      timer.update(timestamp);
+      const elapsedTime = timer.getElapsed();
 
       // Slow drift
       particles.rotation.y = elapsedTime * 0.02;
@@ -116,15 +149,21 @@ export const HeroAtmosphere = () => {
     animate();
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      observer.disconnect();
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+
       if (container && renderer.domElement) {
         container.removeChild(renderer.domElement);
       }
       geometry.dispose();
       material.dispose();
       texture.dispose();
+      renderer.dispose();
     };
   }, []);
 

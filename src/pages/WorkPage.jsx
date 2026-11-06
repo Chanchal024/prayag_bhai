@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { projects } from '../data/projects';
 import { ProjectCard } from '../components/ProjectCard';
 import { ContactCTA } from '../components/ContactCTA';
@@ -6,18 +6,21 @@ import { useCursor } from '../context/CursorContext';
 
 const categories = [
   { label: 'ALL', value: 'ALL' },
-  { label: '01 — VIDEO EDITOR', value: 'VIDEO EDITOR' },
-  { label: '02 — VIDEOGRAPHY', value: 'VIDEOGRAPHY' },
-  { label: '03 — MOTION GRAPHICS', value: 'MOTION GRAPHICS' }
+  { label: '01 — DIGITAL BILLBOARD', value: 'DIGITAL BILLBOARD' },
+  { label: '02 — EVENT', value: 'EVENT' },
+  { label: '03 — MOTION GRAPHICS', value: 'MOTION GRAPHICS' },
+  { label: '04 — REELS', value: 'REELS' }
 ];
 
 export const WorkPage = () => {
   const [selectedCat, setSelectedCat] = useState('ALL');
   const { setCursor, resetCursor } = useCursor();
 
-  const filteredProjects = selectedCat === 'ALL'
-    ? projects
-    : projects.filter((p) => p.category.toUpperCase() === selectedCat);
+  const filteredProjects = useMemo(() => {
+    return selectedCat === 'ALL'
+      ? projects
+      : projects.filter((p) => p.category?.toUpperCase() === selectedCat);
+  }, [selectedCat]);
 
   return (
     <main className="pt-32 pb-20 md:pt-40">
@@ -30,7 +33,7 @@ export const WorkPage = () => {
           SELECTED WORK
         </h1>
         <p className="text-base text-[#A1A1AA] font-light max-w-xl mt-6 leading-relaxed">
-          An editorial collection of video editing projects, videography documentations, and motion graphics campaigns.
+          An editorial collection of video editing projects and motion graphics campaigns.
         </p>
       </section>
 

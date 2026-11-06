@@ -6,7 +6,7 @@ import SectionHeading from './SectionHeading';
 export default function About() {
   const highlights = [
     "DaVinci Certified Colorist",
-    "8+ Years Commercial Experience",
+    "3+ Years Commercial Experience",
     "4K 60FPS Post-Production Suite",
     "3D Motion Graphics Specialist"
   ];
@@ -37,11 +37,11 @@ export default function About() {
               An Impact.
             </h3>
 
-            <div className="relative rounded-[24px] overflow-hidden border border-white/10 shadow-2xl group max-w-lg">
+            <div className="relative rounded-[24px] overflow-hidden border border-white/10 shadow-2xl group max-w-md">
               <img 
                 src="/p3.png" 
                 alt="Prayag Kumar Das" 
-                className="w-full h-64 sm:h-80 object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
+                className="w-full h-56 sm:h-72 object-cover group-hover:scale-105 transition-transform duration-700 brightness-90"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0B] via-transparent to-transparent" />
               <div className="absolute bottom-4 left-6 right-6 flex items-center justify-between">
