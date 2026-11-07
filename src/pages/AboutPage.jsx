@@ -54,13 +54,16 @@ export const AboutPage = () => {
             onMouseLeave={resetCursor}
             className="w-full max-w-md lg:ml-auto aspect-[4/5] rounded-xs overflow-hidden bg-[#141414] relative border border-white/10"
           >
-            <img
-              src="/p3.png"
-              alt="Prayag Kumar Das"
-              className="w-full h-full object-cover object-center"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet="/p3.webp" type="image/webp" />
+              <img
+                src="/p3.png"
+                alt="Prayag Kumar Das"
+                className="w-full h-full object-cover object-center"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <div className="absolute bottom-6 left-6 bg-[#060606]/85 backdrop-blur-md px-4 py-2 border border-white/20 text-[10px] uppercase tracking-[0.25em] text-[#F5F4F0]">
               PRAYAG KUMAR DAS / IN STUDIO 2026
             </div>

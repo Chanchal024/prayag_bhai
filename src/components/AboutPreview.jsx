@@ -90,14 +90,17 @@ export const AboutPreview = () => {
             onMouseLeave={resetCursor}
             className="relative w-full max-w-md aspect-[4/5] overflow-hidden rounded-xs bg-[#141414] shadow-sm border border-white/10"
           >
-            <img
-              ref={imageRef}
-              src="/p3.png"
-              alt="Prayag Kumar Das Portrait Study"
-              className="w-full h-full object-cover object-center"
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet="/p3.webp" type="image/webp" />
+              <img
+                ref={imageRef}
+                src="/p3.png"
+                alt="Prayag Kumar Das Portrait Study"
+                className="w-full h-full object-cover object-center"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
             <div className="absolute inset-0 bg-black/10" />
 
             {/* Asymmetric floating caption */}

@@ -150,11 +150,12 @@ export const Hero = () => {
           disablePictureInPicture
           aria-hidden="true"
           preload="auto"
+          poster="/thumbnails/hero-poster.webp"
           className="w-full h-full object-cover object-center transform-gpu opacity-90"
           style={{ transform: 'translateZ(0)' }}
         >
-          <source src="/videos/hero-video.mp4" type="video/mp4" />
           <source src="/assets/v1.mp4" type="video/mp4" />
+          <source src="/videos/hero-video.mp4" type="video/mp4" />
         </video>
       </div>
 

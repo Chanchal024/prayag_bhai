@@ -72,6 +72,7 @@ export const BottomShowcase = () => {
           loop
           playsInline
           preload="none"
+          poster="/thumbnails/showcase-poster.webp"
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-1000 ease-out brightness-[0.95]"
         >
           <source src="/assets/v2.mp4" type="video/mp4" />

@@ -17,6 +17,7 @@ dist
 dist-ssr
 *.local
 .backup-pre-audit
+.original-videos/
 public/work/
 
 # Editor directories and files
