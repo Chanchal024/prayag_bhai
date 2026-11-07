@@ -4,6 +4,7 @@ import { ArrowUpRight, Play, X, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCursor } from '../context/CursorContext';
+import { OptimizedVideo } from './OptimizedVideo';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -109,16 +110,12 @@ const VideoLightbox = ({ videoSrc, posterSrc, onClose }) => {
 export const ProjectCard = React.memo(({ project, index }) => {
   const cardRef = useRef(null);
   const imgRef = useRef(null);
-  const previewVideoRef = useRef(null);
   const [showVideo, setShowVideo] = useState(false);
-  const [isInView, setIsInView] = useState(false);
-  const [isVideoReady, setIsVideoReady] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { setCursor, resetCursor } = useCursor();
 
   const isVideo = !!project.videoSrc;
-  const safeVideoSrc = isVideo ? encodeURI(project.videoSrc) : null;
+  const previewSrc = project.previewSrc || (isVideo ? `/previews/${project.id}.mp4` : null);
   const posterSrc = project.posterSrc || `/thumbnails/${project.id}.webp`;
 
   useEffect(() => {
@@ -142,50 +139,14 @@ export const ProjectCard = React.memo(({ project, index }) => {
     return () => ctx.revert();
   }, []);
 
-  // Performance optimizer: Viewport-based lazy loading
-  useEffect(() => {
-    if (!isVideo || !cardRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsInView(true);
-          } else {
-            setIsInView(false);
-            if (previewVideoRef.current) {
-              previewVideoRef.current.pause();
-            }
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: '180px' }
-    );
-
-    observer.observe(cardRef.current);
-
-    return () => observer.disconnect();
-  }, [isVideo]);
-
-  // Pause preview when modal opens
-  useEffect(() => {
-    if (showVideo && previewVideoRef.current) {
-      previewVideoRef.current.pause();
-    }
-  }, [showVideo]);
-
   const handleMouseEnter = () => {
     setCursor('view', '▶ PLAY');
-    if (previewVideoRef.current) {
-      previewVideoRef.current.play().catch(() => {});
-    }
+    setIsHovered(true);
   };
 
   const handleMouseLeave = () => {
     resetCursor();
-    if (previewVideoRef.current) {
-      previewVideoRef.current.pause();
-    }
+    setIsHovered(false);
   };
 
   return (
@@ -203,55 +164,19 @@ export const ProjectCard = React.memo(({ project, index }) => {
             className="block relative w-full overflow-hidden bg-[#0c0c0c] rounded-lg cursor-pointer border border-white/5 hover:border-white/20 transition-colors duration-500 shadow-lg"
           >
             <div className={`w-full ${project.coverAspect || 'aspect-[9/16]'} overflow-hidden relative bg-[#0c0c0c]`}>
-              {/* 1. Instant Lightweight WebP Poster (Always visible until video starts playing, prevents blank screen) */}
-              <img
-                src={posterSrc}
-                alt={project.title}
-                loading="lazy"
-                decoding="async"
-                className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-700 ease-out group-hover:scale-105 ${
-                  isVideoReady && isPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
+              <OptimizedVideo
+                previewSrc={previewSrc}
+                posterSrc={posterSrc}
+                aspectRatio={project.coverAspect || 'aspect-[9/16]'}
+                isHovered={isHovered && !showVideo}
+                title={project.title}
               />
 
-              {/* 2. Video Preview (Loaded and played ONLY when in view) */}
-              {isInView && !hasError && (
-                <video
-                  ref={previewVideoRef}
-                  src={safeVideoSrc}
-                  poster={posterSrc}
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  onCanPlay={() => setIsVideoReady(true)}
-                  onPlaying={() => {
-                    setIsVideoReady(true);
-                    setIsPlaying(true);
-                  }}
-                  onPause={() => setIsPlaying(false)}
-                  onError={() => setHasError(true)}
-                  className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700 ease-out group-hover:scale-105 ${
-                    isVideoReady && isPlaying ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-              )}
+              {/* Subtle hover gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
-              {/* 3. Subtle buffer indicator while video is preparing */}
-              {isInView && !isVideoReady && !hasError && (
-                <div className="absolute top-3 right-3 z-10 pointer-events-none">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#ea580c] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#ea580c]"></span>
-                  </span>
-                </div>
-              )}
-
-              {/* 4. Subtle hover gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-              {/* 5. Centered glassmorphic play button on hover */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-400">
+              {/* Centered glassmorphic play button on hover */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-400 pointer-events-none">
                 <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-md border border-white/40 flex items-center justify-center scale-90 group-hover:scale-100 transition-transform duration-400 shadow-xl">
                   <Play className="w-6 h-6 md:w-7 md:h-7 text-white ml-1" fill="white" />
                 </div>
