@@ -142,7 +142,7 @@ export const ProjectCard = React.memo(({ project, index }) => {
     return () => ctx.revert();
   }, []);
 
-  // Performance optimizer: Viewport-based lazy loading & playback control
+  // Performance optimizer: Viewport-based lazy loading
   useEffect(() => {
     if (!isVideo || !cardRef.current) return;
 
@@ -151,9 +151,6 @@ export const ProjectCard = React.memo(({ project, index }) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setIsInView(true);
-            if (previewVideoRef.current && !showVideo) {
-              previewVideoRef.current.play().catch(() => {});
-            }
           } else {
             setIsInView(false);
             if (previewVideoRef.current) {
@@ -168,18 +165,28 @@ export const ProjectCard = React.memo(({ project, index }) => {
     observer.observe(cardRef.current);
 
     return () => observer.disconnect();
-  }, [isVideo, showVideo]);
+  }, [isVideo]);
 
   // Pause preview when modal opens
   useEffect(() => {
-    if (previewVideoRef.current) {
-      if (showVideo) {
-        previewVideoRef.current.pause();
-      } else if (isInView) {
-        previewVideoRef.current.play().catch(() => {});
-      }
+    if (showVideo && previewVideoRef.current) {
+      previewVideoRef.current.pause();
     }
-  }, [showVideo, isInView]);
+  }, [showVideo]);
+
+  const handleMouseEnter = () => {
+    setCursor('view', '▶ PLAY');
+    if (previewVideoRef.current) {
+      previewVideoRef.current.play().catch(() => {});
+    }
+  };
+
+  const handleMouseLeave = () => {
+    resetCursor();
+    if (previewVideoRef.current) {
+      previewVideoRef.current.pause();
+    }
+  };
 
   return (
     <>
@@ -191,13 +198,8 @@ export const ProjectCard = React.memo(({ project, index }) => {
           /* ── Video Card: clean, responsive preview, play button overlay ── */
           <div
             onClick={() => setShowVideo(true)}
-            onMouseEnter={() => {
-              setCursor('view', '▶ PLAY');
-              if (previewVideoRef.current) {
-                previewVideoRef.current.play().catch(() => {});
-              }
-            }}
-            onMouseLeave={resetCursor}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             className="block relative w-full overflow-hidden bg-[#0c0c0c] rounded-lg cursor-pointer border border-white/5 hover:border-white/20 transition-colors duration-500 shadow-lg"
           >
             <div className={`w-full ${project.coverAspect || 'aspect-[9/16]'} overflow-hidden relative bg-[#0c0c0c]`}>
