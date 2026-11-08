@@ -4,19 +4,39 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { experienceData } from '../data/experience';
 import { useCursor } from '../context/CursorContext';
+import {
+  isReducedMotion,
+  WordReveal,
+  animateWordReveal,
+} from '../utils/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const Experience = () => {
   const sectionRef = useRef(null);
+  const headerRef = useRef(null);
+  const titleBoxRef = useRef(null);
   const lineRef = useRef(null);
-  const cardsRef = useRef([]);
+  const rowsRef = useRef([]);
   const nodesRef = useRef([]);
   const { setCursor, resetCursor } = useCursor();
 
   useEffect(() => {
+    if (isReducedMotion()) return;
+
     const ctx = gsap.context(() => {
-      // 1. Reveal vertical timeline line progressively as user scrolls
+      // 1. Typography Reveal: Heading word-by-word
+      if (titleBoxRef.current) {
+        animateWordReveal(titleBoxRef.current, {
+          trigger: headerRef.current,
+          start: 'top 88%',
+          duration: 0.85,
+          stagger: 0.08,
+          ease: 'power3.out',
+        });
+      }
+
+      // 2. Reveal vertical timeline line progressively as user scrolls
       if (lineRef.current) {
         gsap.fromTo(
           lineRef.current,
@@ -34,44 +54,54 @@ export const Experience = () => {
         );
       }
 
-      // 2. Animate experience cards and trigger node glowing states
-      cardsRef.current.forEach((card, idx) => {
-        if (!card) return;
+      // 3. Staggered Content: Sequential experience cards & glowing nodes
+      rowsRef.current.forEach((row, idx) => {
+        if (!row) return;
         const node = nodesRef.current[idx];
+        const cards = row.querySelectorAll('.experience-card');
+
+        const activateNode = () => {
+          if (node) {
+            node.classList.add(
+              'bg-[#ea580c]',
+              'border-[#ea580c]',
+              'shadow-[0_0_20px_rgba(234,88,12,0.95)]',
+              'scale-110'
+            );
+            node.classList.remove('bg-[#060606]', 'border-white/20');
+          }
+        };
+
+        const deactivateNode = () => {
+          if (node) {
+            node.classList.remove(
+              'bg-[#ea580c]',
+              'border-[#ea580c]',
+              'shadow-[0_0_20px_rgba(234,88,12,0.95)]',
+              'scale-110'
+            );
+            node.classList.add('bg-[#060606]', 'border-white/20');
+          }
+        };
 
         gsap.fromTo(
-          card,
-          { opacity: 0, y: 45 },
+          cards,
+          { opacity: 0, y: 35 },
           {
             opacity: 1,
             y: 0,
-            duration: 0.8,
+            duration: 0.85,
             ease: 'power3.out',
             scrollTrigger: {
-              trigger: card,
+              trigger: row,
               start: 'top 85%',
-              onEnter: () => {
-                if (node) {
-                  node.classList.add(
-                    'bg-[#ea580c]',
-                    'border-[#ea580c]',
-                    'shadow-[0_0_20px_rgba(234,88,12,0.95)]',
-                    'scale-110'
-                  );
-                  node.classList.remove('bg-[#060606]', 'border-white/20');
-                }
-              },
-              onLeaveBack: () => {
-                if (node) {
-                  node.classList.remove(
-                    'bg-[#ea580c]',
-                    'border-[#ea580c]',
-                    'shadow-[0_0_20px_rgba(234,88,12,0.95)]',
-                    'scale-110'
-                  );
-                  node.classList.add('bg-[#060606]', 'border-white/20');
-                }
-              },
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+              onEnter: activateNode,
+              onEnterBack: activateNode,
+              onLeave: deactivateNode,
+              onLeaveBack: deactivateNode,
             },
           }
         );
@@ -90,13 +120,20 @@ export const Experience = () => {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#ea580c]/5 blur-[120px] rounded-full pointer-events-none z-0" />
 
       {/* Section Header */}
-      <div className="flex flex-col space-y-3 mb-16 md:mb-24 relative z-10">
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA]">
+      <div
+        ref={headerRef}
+        className="flex flex-col space-y-3 mb-16 md:mb-24 relative z-10"
+      >
+        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA] transform-gpu will-change-transform">
           CAREER JOURNEY
         </span>
-        <h2 className="font-serif text-4xl sm:text-5xl md:text-6xl font-normal text-[#F5F4F0] uppercase tracking-tight">
-          EXPERIENCE
-        </h2>
+        <div ref={titleBoxRef}>
+          <WordReveal
+            text="EXPERIENCE"
+            as="h2"
+            className="font-serif text-4xl sm:text-5xl md:text-6xl font-normal text-[#F5F4F0] uppercase tracking-tight transform-gpu will-change-transform"
+          />
+        </div>
       </div>
 
       {/* Timeline Wrapper Container */}
@@ -119,6 +156,7 @@ export const Experience = () => {
             return (
               <div
                 key={item.id}
+                ref={(el) => (rowsRef.current[idx] = el)}
                 className="relative flex flex-col lg:flex-row items-start lg:items-center"
               >
                 {/* Glowing Timeline Node */}
@@ -138,10 +176,9 @@ export const Experience = () => {
                     } order-1`}
                   >
                     <div
-                      ref={(el) => (cardsRef.current[idx] = el)}
                       onMouseEnter={() => setCursor('hover')}
                       onMouseLeave={resetCursor}
-                      className="group relative bg-[#121214]/75 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-xs hover:border-[#ea580c]/50 hover:shadow-[0_10px_35px_rgba(234,88,12,0.12)] transition-all duration-500 ease-out hover:-translate-y-1"
+                      className="experience-card group relative bg-[#121214]/75 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-xs hover:border-[#ea580c]/50 hover:shadow-[0_10px_35px_rgba(234,88,12,0.12)] transition-all duration-500 ease-out hover:-translate-y-1 transform-gpu will-change-transform"
                     >
                       {/* Sub-header with Role, Company, and Duration Tag */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10 mb-5">
@@ -184,10 +221,9 @@ export const Experience = () => {
                     } order-2`}
                   >
                     <div
-                      ref={(el) => (!isEven ? (cardsRef.current[idx] = el) : null)}
                       onMouseEnter={() => setCursor('hover')}
                       onMouseLeave={resetCursor}
-                      className="group relative bg-[#121214]/75 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-xs hover:border-[#ea580c]/50 hover:shadow-[0_10px_35px_rgba(234,88,12,0.12)] transition-all duration-500 ease-out hover:-translate-y-1"
+                      className="experience-card group relative bg-[#121214]/75 backdrop-blur-md border border-white/10 p-6 sm:p-8 rounded-xs hover:border-[#ea580c]/50 hover:shadow-[0_10px_35px_rgba(234,88,12,0.12)] transition-all duration-500 ease-out hover:-translate-y-1 transform-gpu will-change-transform"
                     >
                       {/* Sub-header with Role, Company, and Duration Tag */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/10 mb-5">

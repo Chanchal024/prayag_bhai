@@ -1,6 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Phone, MapPin, CheckCircle, ArrowRight } from 'lucide-react';
 import { useCursor } from '../context/CursorContext';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  isReducedMotion,
+  WordReveal,
+  animateWordReveal,
+} from '../utils/scrollAnimations';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +27,90 @@ export const ContactPage = () => {
   const [submittedData, setSubmittedData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const { setCursor, resetCursor } = useCursor();
+
+  const pageRef = useRef(null);
+  const headerRef = useRef(null);
+  const titleBoxRef = useRef(null);
+  const descRef = useRef(null);
+  const formColRef = useRef(null);
+  const infoColRef = useRef(null);
+
+  useEffect(() => {
+    if (isReducedMotion()) return;
+
+    const ctx = gsap.context(() => {
+      // 1. Typography Reveal: Large title word-by-word
+      if (titleBoxRef.current) {
+        animateWordReveal(titleBoxRef.current, {
+          duration: 0.95,
+          stagger: 0.08,
+          ease: 'power3.out',
+        });
+      }
+
+      // 2. Staggered Content: Description paragraph
+      if (descRef.current) {
+        gsap.fromTo(
+          descRef.current,
+          { opacity: 0, y: 25 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.85,
+            delay: 0.15,
+            ease: 'power3.out',
+          }
+        );
+      }
+
+      // 3. Staggered Content: Left column inquiry form container reveal
+      if (formColRef.current) {
+        gsap.fromTo(
+          formColRef.current,
+          { opacity: 0, y: 35 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.95,
+            delay: 0.1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: formColRef.current,
+              start: 'top 85%',
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
+
+      // 4. Staggered Content: Right column direct contact items reveal
+      if (infoColRef.current) {
+        gsap.fromTo(
+          infoColRef.current.children,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.9,
+            stagger: 0.12,
+            delay: 0.15,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: infoColRef.current,
+              start: 'top 85%',
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const servicesList = [
     'Video Editing',
@@ -106,16 +199,23 @@ export const ContactPage = () => {
   };
 
   return (
-    <main className="pt-32 pb-20 md:pt-40">
+    <main ref={pageRef} className="pt-32 pb-20 md:pt-40">
       {/* Header */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 mb-16">
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA]">
+      <section ref={headerRef} className="max-w-7xl mx-auto px-6 md:px-12 mb-16">
+        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA] transform-gpu will-change-transform block">
           INITIATE A COMMISSION
         </span>
-        <h1 className="font-serif text-[clamp(3rem,8vw,7.5rem)] leading-[0.95] font-normal text-[#FFFFFF] uppercase mt-3 tracking-tight">
-          LET'S TALK
-        </h1>
-        <p className="text-base text-[#A1A1AA] font-light max-w-xl mt-6 leading-relaxed">
+        <div ref={titleBoxRef}>
+          <WordReveal
+            text="LET'S TALK"
+            as="h1"
+            className="font-serif text-[clamp(3rem,8vw,7.5rem)] leading-[0.95] font-normal text-[#FFFFFF] uppercase mt-3 tracking-tight transform-gpu will-change-transform"
+          />
+        </div>
+        <p
+          ref={descRef}
+          className="text-base text-[#A1A1AA] font-light max-w-xl mt-6 leading-relaxed transform-gpu will-change-transform"
+        >
           Tell us about your upcoming project, campaign, or event. We respond to all serious inquiries within 24 hours.
         </p>
       </section>
@@ -123,7 +223,10 @@ export const ContactPage = () => {
       {/* Main Form & Info Grid */}
       <section className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-28">
         {/* Left Column: Inquiry Form */}
-        <div className="lg:col-span-7 bg-[#111111] text-[#F5F4F0] p-8 sm:p-12 rounded-xs shadow-2xl">
+        <div
+          ref={formColRef}
+          className="lg:col-span-7 bg-[#111111] text-[#F5F4F0] p-8 sm:p-12 rounded-xs shadow-2xl transform-gpu will-change-transform"
+        >
           {isSucceeded ? (
             <div className="py-10 text-center space-y-6 animate-fade-in">
               <CheckCircle className="w-16 h-16 text-[#F5F4F0] mx-auto" />
@@ -311,8 +414,11 @@ export const ContactPage = () => {
         </div>
 
         {/* Right Column: Direct Contact & Location Info */}
-        <div className="lg:col-span-5 flex flex-col justify-between space-y-12">
-          <div className="space-y-6">
+        <div
+          ref={infoColRef}
+          className="lg:col-span-5 flex flex-col justify-between space-y-12"
+        >
+          <div className="space-y-6 transform-gpu will-change-transform">
             <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA]">
               DIRECT CONTACT
             </span>
@@ -351,7 +457,7 @@ export const ContactPage = () => {
             </div>
           </div>
 
-          <div className="bg-[#141414] p-6 rounded-xs space-y-2 border border-white/10">
+          <div className="bg-[#141414] p-6 rounded-xs space-y-2 border border-white/10 transform-gpu will-change-transform">
             <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#ea580c]">
               GLOBAL AVAILABILITY
             </span>

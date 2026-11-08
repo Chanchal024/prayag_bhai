@@ -5,6 +5,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCursor } from '../context/CursorContext';
 import { OptimizedVideo } from './OptimizedVideo';
+import { isReducedMotion, scrollClipReveal } from '../utils/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -109,6 +110,7 @@ const VideoLightbox = ({ videoSrc, posterSrc, onClose }) => {
 /* ── Project Card ── */
 export const ProjectCard = React.memo(({ project, index }) => {
   const cardRef = useRef(null);
+  const mediaBoxRef = useRef(null);
   const imgRef = useRef(null);
   const [showVideo, setShowVideo] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -119,21 +121,39 @@ export const ProjectCard = React.memo(({ project, index }) => {
   const posterSrc = project.posterSrc || `/thumbnails/${project.id}.webp`;
 
   useEffect(() => {
+    if (isReducedMotion()) return;
+
     const ctx = gsap.context(() => {
+      // 1. Staggered card entrance: subtle upward movement
       gsap.fromTo(
         cardRef.current,
-        { y: 50, opacity: 0 },
+        { y: 35, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 1,
+          duration: 0.9,
           ease: 'power3.out',
           scrollTrigger: {
             trigger: cardRef.current,
-            start: 'top 85%',
+            start: 'top 88%',
+            end: 'bottom top',
+            toggleActions: 'play reverse play reverse',
+            invalidateOnRefresh: true,
           },
         }
       );
+
+      // 2. Image / Video Reveal: Uncovers smoothly using clipping-mask transition
+      if (mediaBoxRef.current) {
+        scrollClipReveal(mediaBoxRef.current, imgRef.current, {
+          trigger: cardRef.current,
+          start: 'top 88%',
+          duration: 1.1,
+          ease: 'power3.out',
+          scaleFrom: 1.12,
+          direction: 'bottom',
+        });
+      }
     }, cardRef);
 
     return () => ctx.revert();
@@ -153,7 +173,7 @@ export const ProjectCard = React.memo(({ project, index }) => {
     <>
       <div
         ref={cardRef}
-        className={`group relative flex flex-col ${project.gridSpan || 'col-span-12'}`}
+        className={`group relative flex flex-col transform-gpu will-change-transform ${project.gridSpan || 'col-span-12'}`}
       >
         {isVideo ? (
           /* ── Video Card: clean, responsive preview, play button overlay ── */
@@ -163,7 +183,11 @@ export const ProjectCard = React.memo(({ project, index }) => {
             onMouseLeave={handleMouseLeave}
             className="block relative w-full overflow-hidden bg-[#0c0c0c] rounded-lg cursor-pointer border border-white/5 hover:border-white/20 transition-colors duration-500 shadow-lg"
           >
-            <div className={`w-full ${project.coverAspect || 'aspect-[9/16]'} overflow-hidden relative bg-[#0c0c0c]`}>
+            <div
+              ref={isVideo ? mediaBoxRef : null}
+              className={`w-full ${project.coverAspect || 'aspect-[9/16]'} overflow-hidden relative bg-[#0c0c0c] transform-gpu will-change-transform`}
+              style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+            >
               <OptimizedVideo
                 previewSrc={previewSrc}
                 posterSrc={posterSrc}
@@ -192,7 +216,11 @@ export const ProjectCard = React.memo(({ project, index }) => {
               onMouseLeave={resetCursor}
               className="block relative w-full overflow-hidden bg-[#D8D7D2] rounded-xs cursor-pointer"
             >
-              <div className={`w-full ${project.coverAspect || 'aspect-[16/10]'} overflow-hidden relative`}>
+              <div
+                ref={!isVideo ? mediaBoxRef : null}
+                className={`w-full ${project.coverAspect || 'aspect-[16/10]'} overflow-hidden relative transform-gpu will-change-transform`}
+                style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
+              >
                 <img
                   ref={imgRef}
                   src={project.heroImage}

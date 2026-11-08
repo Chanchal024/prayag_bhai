@@ -1,41 +1,161 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Trophy } from 'lucide-react';
 import { ContactCTA } from '../components/ContactCTA';
 import { useCursor } from '../context/CursorContext';
 import { milestonesData } from '../data/milestones';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  isReducedMotion,
+  WordReveal,
+  animateWordReveal,
+  scrollClipReveal,
+} from '../utils/scrollAnimations';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const AboutPage = () => {
   const { setCursor, resetCursor } = useCursor();
+  const pageRef = useRef(null);
+  const headerRef = useRef(null);
+  const titleBoxRef = useRef(null);
+  const storyRef = useRef(null);
+  const storyTextRef = useRef(null);
+  const portraitBoxRef = useRef(null);
+  const portraitImgRef = useRef(null);
+  const timelineRef = useRef(null);
+  const timelineInfoRef = useRef(null);
+
+  useEffect(() => {
+    if (isReducedMotion()) return;
+
+    const ctx = gsap.context(() => {
+      // 1. Typography Reveal: Page Header word-by-word
+      if (titleBoxRef.current) {
+        animateWordReveal(titleBoxRef.current, {
+          duration: 0.9,
+          stagger: 0.08,
+          ease: 'power3.out',
+        });
+      }
+
+      // 2. Staggered Content: Editorial Story Section Reveal
+      if (storyRef.current && storyTextRef.current) {
+        gsap.fromTo(
+          storyTextRef.current.children,
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.85,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: storyRef.current,
+              start: 'top 85%',
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
+
+      // 3. Image Reveal: Uncovers smoothly using clipping-mask transition
+      if (portraitBoxRef.current) {
+        scrollClipReveal(portraitBoxRef.current, portraitImgRef.current, {
+          trigger: storyRef.current,
+          start: 'top 82%',
+          duration: 1.15,
+          ease: 'power3.out',
+          scaleFrom: 1.14,
+          direction: 'bottom',
+        });
+      }
+
+      // 4. Career Milestones Chronology
+      if (timelineRef.current) {
+        if (timelineInfoRef.current) {
+          gsap.fromTo(
+            timelineInfoRef.current.children,
+            { opacity: 0, y: 35 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.9,
+              stagger: 0.1,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: timelineRef.current,
+                start: 'top 85%',
+                end: 'bottom top',
+                toggleActions: 'play reverse play reverse',
+                invalidateOnRefresh: true,
+              },
+            }
+          );
+        }
+
+        gsap.fromTo(
+          '.milestone-row',
+          { opacity: 0, y: 30 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.8,
+            stagger: 0.08,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: timelineRef.current,
+              start: 'top 80%',
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
+    }, pageRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <main className="pt-32 pb-20 md:pt-40">
+    <main ref={pageRef} className="pt-32 pb-20 md:pt-40">
       {/* Header section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 mb-16 md:mb-24">
-        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA]">
+      <section ref={headerRef} className="max-w-7xl mx-auto px-6 md:px-12 mb-16 md:mb-24">
+        <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#A1A1AA] transform-gpu will-change-transform block">
           ABOUT THE ARTIST
         </span>
-        <h1 className="font-serif text-[clamp(3rem,8vw,7.5rem)] leading-[0.95] font-normal text-[#F5F4F0] uppercase mt-3 tracking-tight">
-          BEHIND THE LENS
-        </h1>
+        <div ref={titleBoxRef}>
+          <WordReveal
+            text="BEHIND THE LENS"
+            as="h1"
+            className="font-serif text-[clamp(3rem,8vw,7.5rem)] leading-[0.95] font-normal text-[#F5F4F0] uppercase mt-3 tracking-tight transform-gpu will-change-transform"
+          />
+        </div>
       </section>
 
       {/* Main Editorial Story Section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-28">
-        <div className="lg:col-span-6 flex flex-col space-y-8">
-          <p className="font-serif text-2xl sm:text-3xl text-[#F5F4F0] leading-snug font-normal">
+      <section
+        ref={storyRef}
+        className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 mb-28"
+      >
+        <div ref={storyTextRef} className="lg:col-span-6 flex flex-col space-y-8">
+          <p className="font-serif text-2xl sm:text-3xl text-[#F5F4F0] leading-snug font-normal transform-gpu will-change-transform">
             "I believe visual editing is not merely about stitching clips together, but capturing how the narrative rhythm feels at that exact moment in time."
           </p>
 
           <div className="space-y-6 text-base text-[#A1A1AA] font-light leading-relaxed">
-            <p>
+            <p className="transform-gpu will-change-transform">
               Based in Cuttack, Odisha, India, Prayag Kumar Das discovered video editing while working on commercial campaigns and cinematic stories. Over the past three years, his work has evolved into a distinctive blend of visual pacing, color grading, and motion graphics.
             </p>
-            <p>
+            <p className="transform-gpu will-change-transform">
               Whether editing high-energy commercial reels or sculpting subtle color tones in post-production, Prayag brings unwavering precision to composition, timing, and visual storytelling.
             </p>
           </div>
 
-          <div className="pt-4 grid grid-cols-2 gap-6 border-t border-white/10">
+          <div className="pt-4 grid grid-cols-2 gap-6 border-t border-white/10 transform-gpu will-change-transform">
             <div>
               <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#ea580c]">LOCATION</span>
               <p className="text-xs text-[#A1A1AA] mt-1 uppercase tracking-wider">CUTTACK, ODISHA, INDIA</p>
@@ -50,16 +170,19 @@ export const AboutPage = () => {
         {/* Large Editorial Portrait */}
         <div className="lg:col-span-6">
           <div
+            ref={portraitBoxRef}
             onMouseEnter={() => setCursor('view')}
             onMouseLeave={resetCursor}
-            className="w-full max-w-md lg:ml-auto aspect-[4/5] rounded-xs overflow-hidden bg-[#141414] relative border border-white/10"
+            className="w-full max-w-md lg:ml-auto aspect-[4/5] rounded-xs overflow-hidden bg-[#141414] relative border border-white/10 transform-gpu will-change-transform"
+            style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
           >
             <picture>
               <source srcSet="/p3.webp" type="image/webp" />
               <img
+                ref={portraitImgRef}
                 src="/p3.png"
                 alt="Prayag Kumar Das"
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center transform-gpu will-change-transform"
                 loading="lazy"
                 decoding="async"
               />
@@ -72,23 +195,29 @@ export const AboutPage = () => {
       </section>
 
       {/* Career Timeline Section */}
-      <section className="py-24 bg-[#0a0a0c]/80 border-t border-b border-white/10 text-[#F5F4F0] px-6 md:px-12 my-20">
+      <section
+        ref={timelineRef}
+        className="py-24 bg-[#0a0a0c]/80 border-t border-b border-white/10 text-[#F5F4F0] px-6 md:px-12 my-20"
+      >
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-4 space-y-4">
-            <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#ea580c]">
+          <div ref={timelineInfoRef} className="lg:col-span-4 space-y-4">
+            <span className="text-xs uppercase tracking-[0.3em] font-semibold text-[#ea580c] transform-gpu will-change-transform block">
               MILESTONES & EXHIBITIONS
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#F5F4F0] uppercase font-normal">
+            <h2 className="font-serif text-3xl sm:text-4xl text-[#F5F4F0] uppercase font-normal transform-gpu will-change-transform">
               CAREER CHRONOLOGY
             </h2>
-            <p className="text-xs text-[#A1A1AA] font-light leading-relaxed max-w-sm pt-2">
+            <p className="text-xs text-[#A1A1AA] font-light leading-relaxed max-w-sm pt-2 transform-gpu will-change-transform">
               Recognitions, festival awards, and honors achieved across filmmaking, photography, and creative media leadership.
             </p>
           </div>
 
           <div className="lg:col-span-8 divide-y divide-white/10">
             {milestonesData.map((item, idx) => (
-              <div key={idx} className="py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:bg-white/[0.02] px-4 rounded-xs transition-colors">
+              <div
+                key={idx}
+                className="milestone-row py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:bg-white/[0.02] px-4 rounded-xs transition-colors transform-gpu will-change-transform"
+              >
                 <div className="flex items-center space-x-3 shrink-0">
                   <span className="text-xs font-mono text-[#ea580c] tracking-widest font-semibold bg-[#ea580c]/10 border border-[#ea580c]/30 px-3 py-1 rounded-full uppercase flex items-center gap-1.5">
                     <Trophy className="w-3 h-3 text-[#ea580c]" />
@@ -104,7 +233,6 @@ export const AboutPage = () => {
           </div>
         </div>
       </section>
-
 
       <ContactCTA />
     </main>

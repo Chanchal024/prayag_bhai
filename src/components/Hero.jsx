@@ -1,129 +1,105 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ArrowRight, ChevronDown } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCursor } from '../context/CursorContext';
-import { HeroAtmosphere } from './HeroAtmosphere';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const Hero = () => {
   const heroRef = useRef(null);
-  const videoRef = useRef(null);
-  const overlayRef = useRef(null);
-  const contentRef = useRef(null);
-  const labelRef = useRef(null);
-  const line1Ref = useRef(null);
-  const line2Ref = useRef(null);
-  const line3Ref = useRef(null);
-  const descRef = useRef(null);
+  const leftColRef = useRef(null);
+  const head1Ref = useRef(null);
+  const head2Ref = useRef(null);
   const ctaRef = useRef(null);
-  const scrollIndRef = useRef(null);
+  const rightColRef = useRef(null);
+  const personImgRef = useRef(null);
+  const haloGlowRef = useRef(null);
+  const orbitRingRef = useRef(null);
+  const scrollRef = useRef(null);
 
   const { setCursor, resetCursor } = useCursor();
 
+  // Subtle interactive parallax for halo & orbit ring
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+
   useEffect(() => {
-    // Respect reduced motion preference
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const ctx = gsap.context(() => {
-      // 1. Entrance timeline
+      // Entrance animation timeline
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-      tl.to(overlayRef.current, {
-        opacity: 1,
-        duration: 0.6,
-      })
+      tl.fromTo(
+        head1Ref.current,
+        { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.7, delay: 0.1 }
+      )
         .fromTo(
-          labelRef.current,
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.6 },
-          '-=0.2'
-        )
-        // Mask clip reveal for headline lines
-        .fromTo(
-          [line1Ref.current, line2Ref.current, line3Ref.current],
-          { yPercent: 110, opacity: 0 },
-          { yPercent: 0, opacity: 1, duration: 1.0, stagger: 0.15, ease: 'power3.out' },
-          '-=0.4'
-        )
-        .fromTo(
-          descRef.current,
-          { opacity: 0, y: 25 },
+          head2Ref.current,
+          { opacity: 0, y: 24 },
           { opacity: 1, y: 0, duration: 0.7 },
-          '-=0.5'
+          '-=0.45'
         )
         .fromTo(
-          ctaRef.current,
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.6 },
-          '-=0.4'
+          ctaRef.current?.children || [],
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.6, stagger: 0.1 },
+          '-=0.35'
         )
         .fromTo(
-          scrollIndRef.current,
-          { opacity: 0, y: 15 },
+          rightColRef.current,
+          { opacity: 0, scale: 0.97 },
+          { opacity: 1, scale: 1, duration: 1.0, ease: 'power2.out' },
+          '-=0.7'
+        )
+        .fromTo(
+          scrollRef.current,
+          { opacity: 0, y: 10 },
           { opacity: 1, y: 0, duration: 0.6 },
           '-=0.3'
         );
 
-      // 2. Parallax scroll effect on video & hero content
-      if (!prefersReducedMotion && heroRef.current && videoRef.current) {
-        gsap.to(videoRef.current, {
-          scale: 1.05,
-          yPercent: 6,
+      // Parallax on scroll
+      if (!prefersReducedMotion && heroRef.current) {
+        gsap.to(leftColRef.current, {
+          yPercent: -10,
+          opacity: 0.5,
           ease: 'none',
           scrollTrigger: {
             trigger: heroRef.current,
             start: 'top top',
             end: 'bottom top',
-            scrub: 0.5,
+            scrub: 0.4,
           },
         });
 
-        gsap.to(contentRef.current, {
-          yPercent: -15,
-          opacity: 0.4,
+        gsap.to(rightColRef.current, {
+          yPercent: -6,
           ease: 'none',
           scrollTrigger: {
             trigger: heroRef.current,
             start: 'top top',
             end: 'bottom top',
-            scrub: 0.5,
+            scrub: 0.4,
           },
         });
-      }
-
-      // Ensure video plays smoothly on mount and pauses when scrolled out of view
-      if (videoRef.current) {
-        videoRef.current.play().catch(() => {});
       }
     }, heroRef);
 
-    // Pause hero background video when not in viewport to save CPU/GPU
-    let observer;
-    if (heroRef.current && videoRef.current) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!videoRef.current) return;
-            if (entry.isIntersecting) {
-              videoRef.current.play().catch(() => {});
-            } else {
-              videoRef.current.pause();
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(heroRef.current);
-    }
-
-    return () => {
-      if (observer) observer.disconnect();
-      ctx.revert();
-    };
+    return () => ctx.revert();
   }, []);
+
+  // Subtle mouse tracking for ambient depth
+  const handleMouseMove = (e) => {
+    if (!heroRef.current) return;
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX / innerWidth - 0.5) * 20;
+    const y = (clientY / innerHeight - 0.5) * 15;
+    setMouseOffset({ x, y });
+  };
 
   const handleScrollClick = (e) => {
     e.preventDefault();
@@ -136,137 +112,127 @@ export const Hero = () => {
   return (
     <section
       ref={heroRef}
-      className="relative w-full h-[100svh] min-h-[700px] bg-[#111111] overflow-hidden flex flex-col justify-between"
+      onMouseMove={handleMouseMove}
+      className="relative w-full min-h-[100svh] bg-[#000000] text-white overflow-hidden flex flex-col justify-between pt-20 sm:pt-24 md:pt-28 lg:pt-32 pb-4"
     >
-      {/* 1. BACKGROUND VIDEO (Layer 0 - Hardware GPU Accelerated) */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none transform-gpu will-change-transform">
-        {/* Video Element */}
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          disablePictureInPicture
-          aria-hidden="true"
-          preload="auto"
-          poster="/thumbnails/hero-poster.webp"
-          className="w-full h-full object-cover object-center transform-gpu opacity-90"
-          style={{ transform: 'translateZ(0)' }}
+      {/* 1. BACKGROUND LAYERS & ATMOSPHERE */}
+      {/* Pure black base */}
+      <div className="absolute inset-0 bg-[#000000] z-0 pointer-events-none" />
+
+      {/* Vertical divider line matching reference image */}
+      <div className="absolute left-[48%] top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-white/[0.07] to-transparent pointer-events-none hidden lg:block z-1" />
+
+      {/* 2. MAIN TWO-COLUMN CONTENT */}
+      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-5 sm:px-8 md:px-12 lg:px-16 xl:px-20 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-6 xl:gap-10 items-center my-auto">
+        
+        {/* LEFT COLUMN: Typography & CTAs */}
+        <div
+          ref={leftColRef}
+          className="lg:col-span-6 xl:col-span-7 flex flex-col justify-center space-y-6 sm:space-y-8 lg:space-y-10 z-10 pt-2 lg:pt-0 -translate-y-4 sm:-translate-y-6 lg:-translate-y-10 xl:-translate-y-12"
         >
-          <source src="/assets/v1.mp4" type="video/mp4" />
-          <source src="/videos/hero-video.mp4" type="video/mp4" />
-        </video>
-      </div>
-
-      {/* 2. CINEMATIC DARK OVERLAY (Layer 1) */}
-      <div
-        ref={overlayRef}
-        className="absolute inset-0 z-1 pointer-events-none bg-gradient-to-b from-[#111111]/60 via-[#111111]/35 to-[#111111]/85 transition-opacity"
-      />
-
-      {/* 3. THREE.JS FLOATING ATMOSPHERE PARTICLES (Layer 2) */}
-      <HeroAtmosphere />
-
-      {/* 4. HERO WEBSITE CONTENT (Layer 10) */}
-      <div
-        ref={contentRef}
-        className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pt-28 md:pt-32 pb-12 flex-1 flex flex-col justify-between"
-      >
-        {/* Top Meta Label */}
-        <div className="flex items-center justify-between border-b border-[#F5F4F0]/20 pb-4 mb-6">
-          <div ref={labelRef} className="flex items-center space-x-3">
-            <span className="w-2 h-2 rounded-full bg-[#F5F4F0] animate-pulse" />
-            <span className="text-xs uppercase tracking-[0.3em] font-medium text-[#F5F4F0]/90">
-              VISUAL STORYTELLER • VIDEO EDITOR
-            </span>
-          </div>
-        </div>
-
-        {/* Center Main Headline & Paragraph */}
-        <div className="max-w-4xl space-y-5 md:space-y-6 mt-2 md:mt-4 mb-auto">
-          {/* Mask / Clip Reveal Headline */}
-          <div className="space-y-1">
-            <div className="overflow-hidden">
-              <h1
-                ref={line1Ref}
-                className="font-serif text-[clamp(3.25rem,7.5vw,7.5rem)] leading-[0.93] font-normal text-[#F5F4F0] uppercase tracking-tight"
-              >
-                CAPTURING
-              </h1>
-            </div>
-            <div className="overflow-hidden">
-              <h1
-                ref={line2Ref}
-                className="font-serif text-[clamp(3.25rem,7.5vw,7.5rem)] leading-[0.93] font-normal text-[#F5F4F0] italic uppercase tracking-tight"
-              >
-                MOMENTS THAT
-              </h1>
-            </div>
-            <div className="overflow-hidden">
-              <h1
-                ref={line3Ref}
-                className="font-serif text-[clamp(3.25rem,7.5vw,7.5rem)] leading-[0.93] font-normal text-[#F5F4F0] uppercase tracking-tight"
-              >
-                LAST FOREVER.
-              </h1>
-            </div>
+          {/* Heading: Built With Purpose. Driven by Vision. */}
+          <div className="space-y-1 sm:space-y-2 font-sans">
+            <h1
+              ref={head1Ref}
+              className="text-[clamp(2.75rem,6vw,6rem)] font-bold tracking-tight leading-[1.05] text-[#8e8e93]"
+            >
+              Built With Purpose.
+            </h1>
+            <h1
+              ref={head2Ref}
+              className="text-[clamp(2.75rem,6vw,6rem)] font-bold tracking-tight leading-[1.05] text-white"
+            >
+              Driven by Vision.
+            </h1>
           </div>
 
-          {/* Supporting Paragraph */}
-          <p
-            ref={descRef}
-            className="text-base sm:text-lg md:text-xl text-[#F5F4F0]/85 font-light leading-relaxed max-w-xl"
-          >
-            Photography that transforms real moments into timeless visual stories, combining fine art sensitivity with high-end commercial precision.
-          </p>
-
-          {/* Action CTAs */}
-          <div ref={ctaRef} className="flex flex-wrap items-center gap-5 pt-4">
+          {/* Buttons: Explore My Work & Work With Me */}
+          <div ref={ctaRef} className="flex flex-wrap items-center gap-5 sm:gap-6 pt-2">
             <Link
               to="/work"
               onMouseEnter={() => setCursor('hover')}
               onMouseLeave={resetCursor}
-              className="inline-flex items-center space-x-3 bg-[#F5F4F0] text-[#111111] px-8 py-4 rounded-full text-xs font-semibold uppercase tracking-[0.2em] hover:bg-[#D8D7D2] transition-all duration-300 group shadow-xl"
+              className="inline-flex items-center space-x-2.5 bg-white text-black px-7 py-3.5 sm:px-8 sm:py-4 rounded-xl text-sm sm:text-base font-semibold hover:bg-zinc-200 transition-all duration-200 group shadow-[0_0_25px_rgba(255,255,255,0.18)]"
             >
-              <span>EXPLORE MY WORK</span>
-              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <span>Explore My Work</span>
+              <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </Link>
 
             <Link
               to="/contact"
               onMouseEnter={() => setCursor('hover')}
               onMouseLeave={resetCursor}
-              className="inline-flex items-center space-x-2 text-xs uppercase tracking-[0.2em] font-semibold text-[#F5F4F0] border border-[#F5F4F0]/40 px-7 py-4 rounded-full hover:bg-[#F5F4F0] hover:text-[#111111] transition-all duration-300"
+              className="inline-flex items-center space-x-2 text-sm sm:text-base font-medium text-zinc-400 hover:text-white transition-colors duration-200 group"
             >
-              <span>WORK WITH ME</span>
+              <span>Work With Me</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
 
-        {/* Bottom Scroll Indicator */}
+        {/* RIGHT COLUMN: Exact Hero Photo with Ambient Halo Glow & Celestial Ring */}
         <div
-          ref={scrollIndRef}
-          className="flex items-center justify-between pt-6 border-t border-[#F5F4F0]/15"
+          ref={rightColRef}
+          className="lg:col-span-6 xl:col-span-5 relative w-full h-[68svh] sm:h-[76svh] md:h-[82svh] lg:h-[92svh] xl:h-[96svh] max-h-[1150px] flex items-end justify-center select-none"
         >
-          <a
-            href="#stats"
-            onClick={handleScrollClick}
-            onMouseEnter={() => setCursor('hover')}
-            onMouseLeave={resetCursor}
-            className="inline-flex items-center space-x-3 text-xs uppercase tracking-[0.25em] text-[#F5F4F0]/90 hover:text-[#F5F4F0] transition-colors group cursor-pointer"
-          >
-            <span>SCROLL TO EXPLORE</span>
-            <div className="relative w-4 h-8 border border-[#F5F4F0]/40 rounded-full flex justify-center p-1">
-              <div className="w-1 h-2 bg-[#F5F4F0] rounded-full animate-bounce" />
-            </div>
-          </a>
+          {/* A. Thin Celestial Circular Ring in background behind head */}
+          <div
+            ref={orbitRingRef}
+            className="absolute rounded-full border border-white/[0.08] pointer-events-none transition-transform duration-300 ease-out"
+            style={{
+              width: 'clamp(400px, 55vw, 720px)',
+              height: 'clamp(400px, 55vw, 720px)',
+              top: '3%',
+              left: '50%',
+              transform: `translate(-50%, -20%) translate3d(${mouseOffset.x * 0.4}px, ${mouseOffset.y * 0.4}px, 0)`,
+            }}
+          />
 
-          <div className="text-[10px] uppercase tracking-[0.25em] text-[#F5F4F0]/60 hidden sm:block">
-            FINE ART & EDITORIAL COMMISSIONS
-          </div>
+          {/* B. Atmospheric Halo Radial Glow behind the halo ring */}
+          <div
+            ref={haloGlowRef}
+            className="absolute rounded-full pointer-events-none transition-transform duration-300 ease-out"
+            style={{
+              width: 'clamp(340px, 46vw, 580px)',
+              height: 'clamp(340px, 46vw, 580px)',
+              top: '5%',
+              left: '50%',
+              background: 'radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0) 75%)',
+              filter: 'blur(35px)',
+              transform: `translate(-50%, -20%) translate3d(${mouseOffset.x * 0.7}px, ${mouseOffset.y * 0.7}px, 0)`,
+            }}
+          />
+
+          {/* C. The Exact Hero Photo */}
+          <img
+            ref={personImgRef}
+            src="/hero-person.webp"
+            alt="Hero Subject"
+            loading="eager"
+            fetchPriority="high"
+            className="relative z-10 w-auto h-full max-h-[96svh] xl:max-h-[100svh] scale-[1.16] origin-bottom object-contain object-bottom pointer-events-auto transform-gpu will-change-transform filter drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] transition-transform duration-500 hover:scale-[1.18]"
+          />
         </div>
+      </div>
+
+      {/* 3. BOTTOM SCROLL INDICATOR */}
+      <div
+        ref={scrollRef}
+        className="relative z-10 w-full flex flex-col items-center justify-center pt-2 pb-1"
+      >
+        <a
+          href="#stats"
+          onClick={handleScrollClick}
+          onMouseEnter={() => setCursor('hover')}
+          onMouseLeave={resetCursor}
+          className="inline-flex flex-col items-center space-y-1 text-[11px] font-medium uppercase tracking-[0.25em] text-zinc-500 hover:text-white transition-colors cursor-pointer group"
+        >
+          <span>SCROLL TO EXPLORE</span>
+          <ChevronDown className="w-4 h-4 animate-bounce text-zinc-500 group-hover:text-white transition-colors" />
+        </a>
       </div>
     </section>
   );
 };
+
+export default Hero;

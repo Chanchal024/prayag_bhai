@@ -4,47 +4,75 @@ import { ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCursor } from '../context/CursorContext';
+import {
+  isReducedMotion,
+  WordReveal,
+  animateWordReveal,
+  scrollClipReveal,
+} from '../utils/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export const AboutPreview = () => {
   const sectionRef = useRef(null);
   const textRef = useRef(null);
+  const headingRef = useRef(null);
+  const paragraphRef = useRef(null);
+  const linkRef = useRef(null);
+  const imageBoxRef = useRef(null);
   const imageRef = useRef(null);
   const { setCursor, resetCursor } = useCursor();
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        textRef.current?.children || [],
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.15,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 75%',
-          },
-        }
-      );
+    if (isReducedMotion()) return;
 
-      gsap.fromTo(
-        imageRef.current,
-        { scale: 1.1, opacity: 0.8 },
-        {
-          scale: 1,
-          opacity: 1,
-          duration: 1.2,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: 'top 70%',
-          },
-        }
-      );
+    const ctx = gsap.context(() => {
+      // 1. Typography Reveal: Large heading reveals word-by-word
+      if (headingRef.current) {
+        animateWordReveal(headingRef.current, {
+          trigger: sectionRef.current,
+          start: 'top 85%',
+          duration: 0.85,
+          stagger: 0.035,
+          ease: 'power3.out',
+        });
+      }
+
+      // 2. Staggered Content: Paragraph and CTA button enter sequentially
+      const contentElements = [paragraphRef.current, linkRef.current].filter(Boolean);
+      if (contentElements.length) {
+        gsap.fromTo(
+          contentElements,
+          { opacity: 0, y: 28 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.85,
+            stagger: 0.12,
+            delay: 0.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 82%',
+              end: 'bottom top',
+              toggleActions: 'play reverse play reverse',
+              invalidateOnRefresh: true,
+            },
+          }
+        );
+      }
+
+      // 3. Image Reveal: Uncovers smoothly using clipping-mask transition
+      if (imageBoxRef.current) {
+        scrollClipReveal(imageBoxRef.current, imageRef.current, {
+          trigger: sectionRef.current,
+          start: 'top 80%',
+          duration: 1.15,
+          ease: 'power3.out',
+          scaleFrom: 1.15,
+          direction: 'bottom',
+        });
+      }
     }, sectionRef);
 
     return () => ctx.revert();
@@ -62,15 +90,24 @@ export const AboutPreview = () => {
             </span>
           </div>
 
-          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.2] text-[#F5F4F0]">
-            A passionate video editor dedicated to capturing life's most meaningful moments.
-          </h2>
+          {/* 1. Typography Reveal: Large Heading Word-by-Word */}
+          <div ref={headingRef}>
+            <WordReveal
+              text="A passionate video editor dedicated to capturing life's most meaningful moments."
+              as="h2"
+              className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal leading-[1.2] text-[#F5F4F0]"
+            />
+          </div>
 
-          <p className="text-base md:text-lg text-[#A1A1AA] font-light leading-relaxed">
+          {/* 2. Staggered Content: Paragraph & CTA link */}
+          <p
+            ref={paragraphRef}
+            className="text-base md:text-lg text-[#A1A1AA] font-light leading-relaxed transform-gpu will-change-transform"
+          >
             With a sharp eye for pacing, color grading, and visual storytelling, I create films and edits that feel honest, cinematic and timeless. Based in Cuttack, Odisha, India, I work worldwide with directors, high-end brands, and agencies.
           </p>
 
-          <div>
+          <div ref={linkRef} className="transform-gpu will-change-transform">
             <Link
               to="/about"
               onMouseEnter={() => setCursor('hover')}
@@ -85,10 +122,13 @@ export const AboutPreview = () => {
 
         {/* Right Column Editorial Image (~55%) - Asymmetric layout */}
         <div className="md:col-span-6 lg:col-span-7 flex justify-end">
+          {/* 3. Image Reveal: Uncovers with Clipping-Mask Transition */}
           <div
+            ref={imageBoxRef}
             onMouseEnter={() => setCursor('view')}
             onMouseLeave={resetCursor}
-            className="relative w-full max-w-md aspect-[4/5] overflow-hidden rounded-xs bg-[#141414] shadow-sm border border-white/10"
+            className="relative w-full max-w-md aspect-[4/5] overflow-hidden rounded-xs bg-[#141414] shadow-sm border border-white/10 transform-gpu will-change-transform"
+            style={{ clipPath: 'inset(0% 0% 0% 0%)' }}
           >
             <picture>
               <source srcSet="/p3.webp" type="image/webp" />
@@ -96,7 +136,7 @@ export const AboutPreview = () => {
                 ref={imageRef}
                 src="/p3.png"
                 alt="Prayag Kumar Das Portrait Study"
-                className="w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center transform-gpu will-change-transform"
                 loading="lazy"
                 decoding="async"
               />

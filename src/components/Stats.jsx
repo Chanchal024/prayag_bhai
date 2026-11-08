@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { isReducedMotion } from '../utils/scrollAnimations';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,18 +14,45 @@ const statData = [
 
 export const Stats = () => {
   const sectionRef = useRef(null);
+  const cardsRef = useRef([]);
   const countersRef = useRef([]);
 
   useEffect(() => {
+    if (isReducedMotion()) {
+      statData.forEach((stat, idx) => {
+        const el = countersRef.current[idx];
+        if (el) el.textContent = `${stat.val}${stat.suffix}`;
+      });
+      return;
+    }
+
     const ctx = gsap.context(() => {
+      // Bidirectional timeline for cards entrance & counter animation
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
+          start: 'top 85%',
+          end: 'bottom top',
+          toggleActions: 'play reverse play reverse',
+          invalidateOnRefresh: true,
         },
       });
 
+      // 1. Cards stagger slide up
+      tl.fromTo(
+        cardsRef.current,
+        { opacity: 0, y: 35 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.85,
+          stagger: 0.12,
+          ease: 'power3.out',
+        },
+        0
+      );
+
+      // 2. Numerical counter increment
       statData.forEach((stat, idx) => {
         const el = countersRef.current[idx];
         if (!el) return;
@@ -34,13 +62,16 @@ export const Stats = () => {
           obj,
           {
             value: stat.val,
-            duration: 2.2,
+            duration: 1.8,
             ease: 'power2.out',
             onUpdate: () => {
               el.textContent = `${Math.floor(obj.value)}${stat.suffix}`;
             },
+            onReverseComplete: () => {
+              el.textContent = `0${stat.suffix}`;
+            },
           },
-          0
+          0.1
         );
       });
     }, sectionRef);
@@ -58,7 +89,8 @@ export const Stats = () => {
         {statData.map((stat, idx) => (
           <div
             key={stat.num}
-            className="flex flex-col space-y-4 border-l border-white/10 pl-6 lg:pl-8 py-2"
+            ref={(el) => (cardsRef.current[idx] = el)}
+            className="flex flex-col space-y-4 border-l border-white/10 pl-6 lg:pl-8 py-2 transform-gpu will-change-transform"
           >
             <span className="text-xs uppercase tracking-[0.3em] text-[#ea580c] font-semibold">
               {stat.num}
